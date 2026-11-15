@@ -1,0 +1,27 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.session import get_session
+
+router = APIRouter(tags=["operations"])
+
+
+@router.get("/health", summary="Process health")
+async def health() -> dict:
+    return {"success": True, "data": {"status": "healthy"}}
+
+
+@router.get("/ready", summary="Dependency and schema readiness")
+async def ready(session: AsyncSession = Depends(get_session)) -> dict:
+    try:
+        await session.execute(text("SELECT 1"))
+        migration = await session.scalar(text("SELECT to_regclass('public.alembic_version')"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Readiness dependencies are unavailable",
+        ) from exc
+    if migration is None:
+        raise HTTPException(status_code=503, detail="Database migrations have not been applied")
+    return {"success": True, "data": {"status": "ready"}}
