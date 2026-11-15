@@ -27,6 +27,6 @@ Owners are intentionally placeholders until the team confirms names. Estimates a
 |---|---|---|
 | Confirm course timezone and Demo Day | Final handoff | `[PENDING: instructor/course materials]` |
 | Confirm team names, repository, board, burndown sheet | Phase 0/final evidence | `[PENDING: team]` |
-| Verify Python 3.12 and Docker-compatible local runtime | Phase 1 | Python 3.12.16 verified; tests and lint pass; Docker CLI available, database runtime checks pending |
+| Verify Python 3.12 and Docker-compatible local runtime | Phase 1 | Phase 2 follow-up passed: Python 3.12.16, both Compose databases, migrations/seed, 41 tests, lint, drift check, live health/readiness and outage/recovery |
 | Verify Azure Student eligibility, regional prices, quota, private PostgreSQL networking, TLS/DNS | Phase 10/11 | Not blocking local work; no resources provisioned |
 | Verify Google Maps billing/free allowance and key restrictions | Phase 9 | Not blocking backend work; no key used |

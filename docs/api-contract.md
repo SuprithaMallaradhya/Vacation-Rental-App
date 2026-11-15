@@ -15,7 +15,7 @@ Every response includes `X-Request-ID`; errors also include the same value in JS
 | Method | Path | Behavior |
 |---|---|---|
 | GET | `/health` | Process-only JSON 200; does not query PostgreSQL |
-| GET | `/ready` | JSON 200 only when PostgreSQL is reachable and `alembic_version` exists; otherwise JSON 503 |
+| GET | `/ready` | JSON 200 only when PostgreSQL is reachable, the Alembic revision matches the app, and required tables exist; otherwise JSON 503 |
 | GET | `/docs` | Swagger UI |
 | GET | `/redoc` | ReDoc |
 | GET | `/openapi.json` | FastAPI-generated OpenAPI |
@@ -25,6 +25,8 @@ Every response includes `X-Request-ID`; errors also include the same value in JS
 The [backend design](../BACKEND_PLAN_AND_DESIGN_V2.md) provides the shared architecture and planned features. This contract will document implemented product routes, roles, date/time rules, pagination, and analytics definitions as each phase is delivered. Initial auth/search/booking fields and errors must be reviewed by the teammate before frontend integration.
 
 ## Frontend handoff
+
+Phase 2 adds the schema and seed, with no new product endpoints. The price field is `nightly_price`, money will serialize as decimal strings, ZIP codes remain strings, and dates use `check_in`/`check_out`. Booking state is persisted as `reservation_state=CONFIRMED|CANCELLED`; completion will be computed by the booking API. See [database conventions](database.md) for snapshot fields and the ERD. These are implementation choices for teammate review; they do not claim a completed frontend agreement.
 
 - `[PENDING: teammate contract review]`
 - `[PENDING: reachable shared API base URL; localhost alone is not a cross-machine handoff]`

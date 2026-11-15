@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -6,6 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.database.session import dispose_engine
 from app.middleware.errors import (
     http_error_handler,
     unhandled_error_handler,
@@ -17,7 +19,20 @@ from app.routers.health import router as health_router
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
 
-app = FastAPI(title=settings.app_name, version="0.1.0", docs_url="/docs", redoc_url="/redoc")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await dispose_engine()
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan,
+)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
     CORSMiddleware,

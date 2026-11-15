@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="970" viewBox="0 0 1280 970" role="img" aria-labelledby="title desc">
+  <title id="title">Vacation Rental database ERD</title>
+  <desc id="desc">Eleven domain tables. Users host listings, create bookings, and record moderation actions. Listings own weekly contact hours, booking rules, media, amenity links, and date blocks. Each booking has at most one review. Arrows run from the referenced parent to the dependent table.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#64748b"/></marker>
+    <style>
+      text {font-family:system-ui,sans-serif;fill:#172554}
+      .heading {font-size:17px;font-weight:700}
+      .body {font-size:14px}
+      .note {font-size:14px;fill:#475569}
+      .box {fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;rx:9}
+      .edge {fill:none;stroke:#64748b;stroke-width:1.6;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1280" height="970" fill="white"/>
+  <text x="30" y="35" font-size="25" font-weight="700">Vacation Rental — database relationships</text>
+  <text x="30" y="60" class="note">PK = primary key · FK = foreign key · UK = unique · parent → dependent (0..many unless labeled)</text>
+  <g class="edge">
+    <path d="M550 230 L300 280"/><path d="M730 230 L950 280"/>
+    <path d="M640 230 L640 280"/>
+    <path d="M430 345 L500 345"/><path d="M430 400 L770 400"/>
+    <path d="M770 320 L730 320"/>
+    <path d="M160 470 L130 530"/><path d="M290 470 L385 530"/>
+    <path d="M430 440 L640 530"/>
+    <path d="M80 430 L15 500 L15 780 L30 780"/>
+    <path d="M300 470 L270 505 L270 730 L285 765"/>
+    <path d="M640 730 L515 780"/>
+    <path d="M950 490 L950 550"/>
+  </g>
+  <g transform="translate(490 90)">
+    <rect class="box" width="300" height="140"/>
+    <text x="16" y="28" class="heading">users</text>
+    <text x="16" y="54" class="body"><tspan x="16">id PK · email UK · password_hash</tspan><tspan x="16" dy="23">name · phone · audit timestamps</tspan><tspan x="16" dy="23">role: CUSTOMER / HOST / ADMIN</tspan></text>
+  </g>
+  <g transform="translate(30 280)">
+    <rect class="box" width="400" height="190"/>
+    <text x="16" y="28" class="heading">listings</text>
+    <text x="16" y="55" class="body"><tspan x="16">id PK · host_id FK → users</tspan><tspan x="16" dy="24">name · address · city/state/ZIP · coordinates</tspan><tspan x="16" dy="24">timezone · contact fields · nightly_price/USD</tspan><tspan x="16" dy="24">max_guests · audit timestamps · removed_at</tspan><tspan x="16" dy="24">status: PENDING / APPROVED / REJECTED / REMOVED</tspan></text>
+  </g>
+  <g transform="translate(500 280)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">admin_actions</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK · admin_id FK</tspan><tspan x="14" dy="23">listing_id FK · action</tspan><tspan x="14" dy="23">reason · created_at</tspan></text>
+  </g>
+  <g transform="translate(770 280)">
+    <rect class="box" width="470" height="210"/>
+    <text x="16" y="28" class="heading">bookings</text>
+    <text x="16" y="55" class="body"><tspan x="16">id PK · listing_id FK · customer_id FK → users</tspan><tspan x="16" dy="24">check_in / check_out DATE · guests · UTC arrival/departure</tspan><tspan x="16" dy="24">nightly_price_snapshot · total_cost/USD</tspan><tspan x="16" dy="24">listing name/address/ZIP/timezone snapshots</tspan><tspan x="16" dy="24">CONFIRMED / CANCELLED · cancelled_at · timestamps</tspan><tspan x="16" dy="24">GiST excludes overlapping confirmed nightly ranges</tspan></text>
+  </g>
+  <g transform="translate(30 530)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">listing_hours</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK · listing_id FK</tspan><tspan x="14" dy="23">weekday 0–6 · closed</tspan><tspan x="14" dy="23">opening / closing time</tspan></text>
+  </g>
+  <g transform="translate(285 530)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">listing_booking_rules</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK · listing_id FK</tspan><tspan x="14" dy="23">weekday · allowed flags</tspan><tspan x="14" dy="23">arrival/departure windows</tspan><tspan x="14" dy="23">and default times</tspan></text>
+  </g>
+  <g transform="translate(540 530)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">listing_media</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK · listing_id FK</tspan><tspan x="14" dy="23">HTTPS URL · media type</tspan><tspan x="14" dy="23">caption · sort_order</tspan></text>
+  </g>
+  <g transform="translate(830 550)">
+    <rect class="box" width="330" height="140"/>
+    <text x="16" y="28" class="heading">reviews</text>
+    <text x="16" y="55" class="body"><tspan x="16">id PK · booking_id FK + UK (0..1)</tspan><tspan x="16" dy="23">rating 1–5 · comment · created_at</tspan><tspan x="16" dy="23">listing/customer derived via booking</tspan></text>
+  </g>
+  <g transform="translate(30 730)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">availability_blocks</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK · listing_id FK</tspan><tspan x="14" dy="23">start_date / end_date</tspan><tspan x="14" dy="23">reason · created_at</tspan></text>
+  </g>
+  <g transform="translate(285 730)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">listing_amenities</text>
+    <text x="14" y="55" class="body"><tspan x="14">listing_id PK + FK</tspan><tspan x="14" dy="23">amenity_id PK + FK</tspan><tspan x="14" dy="23">Composite primary key</tspan></text>
+  </g>
+  <g transform="translate(540 730)">
+    <rect class="box" width="230" height="140"/>
+    <text x="14" y="28" class="heading">amenities</text>
+    <text x="14" y="55" class="body"><tspan x="14">id PK</tspan><tspan x="14" dy="23">name UK</tspan></text>
+  </g>
+  <text x="30" y="920" class="note">All domain IDs are UUIDs. Audit timestamps use UTC; money uses NUMERIC(10,2); ZIP codes remain text.</text>
+  <text x="30" y="945" class="note">Nightly inventory and date blocks use [start, end). Role, ownership, and cross-table business rules are enforced by future services.</text>
+</svg>
