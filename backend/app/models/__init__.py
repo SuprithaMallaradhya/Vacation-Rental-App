@@ -10,6 +10,7 @@ from app.models.domain import (
     ListingBookingRule,
     ListingHours,
     ListingMedia,
+    ListingRemoval,
     Review,
     User,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "ListingBookingRule",
     "ListingHours",
     "ListingMedia",
+    "ListingRemoval",
     "Review",
     "User",
 ]

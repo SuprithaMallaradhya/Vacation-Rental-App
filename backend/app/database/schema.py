@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-SCHEMA_REVISION = "0001_initial_schema"
+SCHEMA_REVISION = "0002_listing_removal_audit"
 REQUIRED_TABLES = (
     "users",
     "listings",
@@ -14,6 +14,7 @@ REQUIRED_TABLES = (
     "bookings",
     "reviews",
     "admin_actions",
+    "listing_removals",
 )
 
 

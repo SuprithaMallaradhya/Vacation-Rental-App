@@ -38,3 +38,16 @@ class ErrorResponse(BaseModel):
     success: Literal[False] = False
     error: ErrorBody
     request_id: str
+
+
+class Pagination(BaseModel):
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class Paginated[Item](BaseModel):
+    success: Literal[True] = True
+    data: list[Item]
+    pagination: Pagination

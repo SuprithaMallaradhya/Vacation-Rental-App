@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="970" viewBox="0 0 1280 970" role="img" aria-labelledby="title desc">
   <title id="title">Vacation Rental database ERD</title>
-  <desc id="desc">Eleven domain tables. Users host listings, create bookings, and record moderation actions. Listings own weekly contact hours, booking rules, media, amenity links, and date blocks. Each booking has at most one review. Arrows run from the referenced parent to the dependent table.</desc>
+  <desc id="desc">Twelve domain tables. Users host listings, create bookings, and record moderation/removal actions. Listings own weekly contact hours, booking rules, media, amenity links, and date blocks. Each booking has at most one review and each listing at most one removal audit. Arrows run from the referenced parent to the dependent table.</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#64748b"/></marker>
     <style>
@@ -26,6 +26,8 @@
     <path d="M300 470 L270 505 L270 730 L285 765"/>
     <path d="M640 730 L515 780"/>
     <path d="M950 490 L950 550"/>
+    <path d="M430 455 L795 710 L830 780"/>
+    <path d="M790 180 L1260 180 L1260 800 L1160 800"/>
   </g>
   <g transform="translate(490 90)">
     <rect class="box" width="300" height="140"/>
@@ -81,6 +83,11 @@
     <rect class="box" width="230" height="140"/>
     <text x="14" y="28" class="heading">amenities</text>
     <text x="14" y="55" class="body"><tspan x="14">id PK</tspan><tspan x="14" dy="23">name UK</tspan></text>
+  </g>
+  <g transform="translate(830 730)">
+    <rect class="box" width="330" height="140"/>
+    <text x="16" y="28" class="heading">listing_removals</text>
+    <text x="16" y="55" class="body"><tspan x="16">id PK · listing_id FK + UK (0..1)</tspan><tspan x="16" dy="23">actor_id FK → users</tspan><tspan x="16" dy="23">reason · created_at</tspan></text>
   </g>
   <text x="30" y="920" class="note">All domain IDs are UUIDs. Audit timestamps use UTC; money uses NUMERIC(10,2); ZIP codes remain text.</text>
   <text x="30" y="945" class="note">Nightly inventory and date blocks use [start, end). Role, ownership, and cross-table business rules are enforced by future services.</text>

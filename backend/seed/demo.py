@@ -25,6 +25,7 @@ from app.models import (
     ListingBookingRule,
     ListingHours,
     ListingMedia,
+    ListingRemoval,
     Review,
     User,
 )
@@ -212,6 +213,19 @@ async def seed_demo(session: AsyncSession, *, as_of: datetime | None = None) -> 
         (AdminAction, actions),
     ):
         counts[model.__tablename__] = await insert_missing(session, model, rows)
+    counts["listing_removals"] = await insert_missing(
+        session,
+        ListingRemoval,
+        [
+            dict(
+                id=demo_id("removal/11"),
+                listing_id=demo_id("listing/11"),
+                actor_id=demo_id("user/0"),
+                reason="Demo moderation decision",
+                created_at=listings[11]["removed_at"],
+            )
+        ],
+    )
     bookings, reviews = [], []
     # Exact boundary, one microsecond inside, and one microsecond outside each window.
     created_times = [anchor]

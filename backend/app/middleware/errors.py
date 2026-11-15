@@ -22,7 +22,7 @@ async def http_error_handler(request: Request, exc: StarletteHTTPException) -> J
     detail = exc.detail if isinstance(exc.detail, str) else "Request failed"
     code = getattr(exc, "code", "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR")
     return JSONResponse(
-        content=error_payload(code, detail, [], request),
+        content=error_payload(code, detail, getattr(exc, "details", []), request),
         status_code=exc.status_code,
         headers=exc.headers,
     )

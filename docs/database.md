@@ -1,6 +1,6 @@
 # Database schema
 
-The implemented schema is defined in `backend/app/models/` and frozen in the initial Alembic migration. This document and the API contract resolve older draft field/state wording in the V2 design.
+The implemented schema is defined in `backend/app/models/` and versioned by Alembic migrations. The initial migration creates the original 11 tables; Phase 4 adds `listing_removals` in revision `0002_listing_removal_audit`. This document and the API contract resolve older draft field/state wording in the V2 design.
 
 - [ERD source](diagrams/erd.mmd)
 - [Readable ERD export](diagrams/erd.svg)
@@ -22,6 +22,8 @@ Persisted reservation states are only `CONFIRMED` and `CANCELLED`; completion is
 Checks enforce normalized email, known enum values, coordinate bounds, positive prices/capacity/guests, ordered dates/UTC times, calculated totals, cancellation/removal timestamp consistency, rating 1–5, valid weekly windows, HTTPS media URLs, and nonempty rejection/removal reasons.
 
 `btree_gist` supports a partial GiST exclusion constraint combining listing UUID equality and overlapping date ranges for `CONFIRMED` bookings. Cancelled bookings do not consume inventory, and adjacent date ranges are allowed. This is database defense in depth: Phase 6 must still lock the listing row and test service races involving bookings, blocks, and moderation across independent transactions.
+
+`listing_removals` retains one terminal removal record per listing, with listing/actor FKs, a nonblank reason, and UTC creation time. Host removals use their actual user ID; Admin removals also create an `admin_actions` record in the same transaction. Repeated removal does not rewrite history. The additive migration does not fabricate missing legacy removal metadata; only the explicitly known fake demo row is added by the guarded seed. Both original data and existing volume contents are preserved.
 
 Indexes cover approved location/ZIP search, Host status scope, listing-date overlap, Customer booking history, listing/booking creation time and ZIP analytics, media ordering, and moderation history. Review booking uniqueness supplies its lookup index.
 

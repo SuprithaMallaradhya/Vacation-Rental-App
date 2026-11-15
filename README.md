@@ -1,6 +1,6 @@
 # Vacation Rental App
 
-The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–3 provide the foundation, database schema, demo data, registration, JSON login, and JWT/role enforcement. Listing, booking, review, and analytics APIs remain planned.
+The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–4 provide the foundation, database schema, demo data, authentication, Host listing management, and Admin moderation. Public search, booking, review, and analytics APIs remain planned.
 
 ## Prerequisites
 
@@ -38,6 +38,7 @@ open http://127.0.0.1:8000/docs
 ```bash
 make test TEST_PATH=tests/foundation
 make test TEST_PATH=tests/auth
+make test TEST_PATH=tests/listings
 make test
 make lint
 make schema-check
@@ -73,12 +74,19 @@ Access tokens expire after 60 minutes by default. A blank `JWT_SECRET_KEY` gener
 
 The basic process-local login limit is 10 attempts per client IP per 60 seconds. Login may return 429 with Retry-After; it is not a distributed limit across future VMs. See the [auth contract and React handoff](docs/authentication.md) for exact request/response examples, validation, 401/403 handling, and deployment limitations.
 
+## Host listings and Admin moderation
+
+After updating, run `make migrate` and `make seed`. Revision `0002_listing_removal_audit` adds removal history without changing existing listings/bookings. Hosts can create/edit their own pending listings, maintain media/amenities/contact hours/booking rules/date blocks, and soft-remove listings with a reason. Admins can review pending listings, approve/reject them, remove them with an audit record, and view moderation history.
+
+Use the Host/Admin groups in Swagger with the appropriate demo token. Start with `GET /api/v1/host/amenities` for reference IDs. Complete listing details, a photo, and all seven weekdays of hours/rules before approval. Material edits require reapproval; future accepted stays protect their location, capacity, and booking windows. All DELETE endpoints return JSON, and listing removal requires a JSON reason. Read the [listing management contract](docs/listing-management.md) and [form examples](docs/fixtures/listings.json) before connecting React.
+
 ## Project documents
 
 - [Implementation status](docs/implementation-status.md)
 - [Design decisions](docs/design-decisions.md)
 - [API contract](docs/api-contract.md)
 - [Authentication and frontend handoff](docs/authentication.md)
+- [Host listings and Admin moderation](docs/listing-management.md)
 - [Requirement coverage](docs/requirement-coverage.md)
 - [Product backlog](docs/product-backlog.md)
 - [External checks](docs/external-checks.md)

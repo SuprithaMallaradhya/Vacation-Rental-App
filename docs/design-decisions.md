@@ -25,6 +25,16 @@
 | 2026-11-15 | Server assigns signup roles and rejects unknown JSON fields; DB uniqueness handles concurrent normalized emails | Prevents role injection and duplicate-account races; Admin is seed-only | Implemented in Phase 3 |
 | 2026-11-15 | Log unexpected exception class and request ID without raw exception text/SQL parameters | Prevents credentials or password hashes from appearing in failure logs; preserves generic JSON 500 responses and request IDs | Implemented in Phase 3 |
 | 2026-11-15 | Move PostgreSQL migration/seed fixtures into shared test support | Auth and database tests use the same guarded isolated-schema harness; no new migration is needed for auth | Implemented in Phase 3 |
+| 2026-11-15 | Phase 4 starts on `backend/listings-moderation` from merged main `670953f` | Keeps the new milestone separate from the merged auth branch | Implemented in Phase 4 |
+| 2026-11-15 | Every listing/child/moderation mutation locks and refreshes the listing row first | Serializes updates across processes; future booking/cancellation writers must use the same helper/order | Implemented in Phase 4 |
+| 2026-11-15 | Add `listing_removals` in additive migration `0002_listing_removal_audit` | Records both Host and Admin actors/reasons without misusing the Admin-only audit table; no invented legacy backfill | Implemented in Phase 4 |
+| 2026-11-15 | Host/Admin listing DELETE requires a JSON reason and is idempotent/terminal | Keeps reservations/reviews and the original removal record; Admin removals additionally create an admin_actions row | Implemented in Phase 4 |
+| 2026-11-15 | Drafts validate supplied core fields but may omit description/contact/media/weekly rows until approval | Supports incremental Host forms while approval validates all required fields atomically | Implemented in Phase 4 |
+| 2026-11-15 | Use full seven-day PUT replacements, local HH:MM, and separate contact hours versus stay windows | Avoids partial-week ambiguity; future accepted UTC times remain valid despite default-only changes | Implemented in Phase 4 |
+| 2026-11-15 | Real material/photo changes reset approval; no-op patches preserve it | Price/contact/hours/rules/blocks remain nonmaterial; rejected listings return to pending on actual edits | Implemented in Phase 4 |
+| 2026-11-15 | Protect future/ongoing noncancelled stays against location/timezone/capacity/window changes | Preserve accepted inventory and guest/time snapshots; location changes with no active future dependency remain possible | Implemented in Phase 4 |
+| 2026-11-15 | Protect Host form amenity references at `/api/v1/host/amenities` | Shares reference IDs now without implementing the Phase 5 public amenities/search APIs early | Implemented in Phase 4 |
+| 2026-11-15 | Paginated lists use top-level pagination and deterministic ordering; money strings and numeric coordinates | Aligns with the V2 envelope and React form/map needs | Implemented in Phase 4 |
 
 ## Pending external confirmations
 

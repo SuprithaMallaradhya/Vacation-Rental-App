@@ -142,6 +142,58 @@ Initial formatting/type-parameter lint findings were corrected before the full g
 - Course timezone/Demo Day, team/board/instructor links, and actual frontend contract approval remain pending.
 - Phase 3 checkpoint commit: `feat: add JSON authentication, JWTs, and role enforcement`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 4 — implemented and locally verified
+
+Branch: `backend/listings-moderation`, created without upstream tracking from merged `origin/main` at `670953f` (Phase 3 merge). The working tree was clean before implementation.
+
+Implemented all 20 planned Host/Admin operations plus protected Host amenity references (21 operations total): Host listing create/list/detail/patch/soft-remove, weekly contact hours and booking rules, media add/patch/delete, date-block list/add/delete, and Admin list/pending/detail/approve/reject/remove/audit history. APIs use bearer roles, scoped nested ownership, request/response models, decimal money strings, numeric coordinates, bounded deterministic pagination, and JSON deletes.
+
+Added pending/approved/rejected/removed transitions, complete approval validation with field details, material-edit reapproval, atomic moderation audit rows, and one listing-first row-lock helper for all mutations. Blocks reject overlapping noncancelled reservations and other blocks. Future/ongoing stays protect location/timezone, accepted UTC booking windows, and guest capacity. Removal is terminal/idempotent and preserves bookings/reviews; Host/Admin removals require a reason.
+
+### Additive audit schema decision
+
+The existing `admin_actions` table has an Admin-specific actor, so Host removals must not be written there. Added `listing_removals` with unique listing FK, actual user actor FK, nonblank reason, and UTC timestamp through `0002_listing_removal_audit`. Admin removal inserts both records in the same transaction. The migration preserves all existing rows and does not invent missing legacy metadata. The guarded seed adds only the known fake removal record. Readiness now requires the new head/table, and the ERD documents all 12 current tables.
+
+### Files changed
+
+- New: `backend/app/routers/host.py`, `routers/admin.py`, `schemas/listings.py`, `services/listings.py`, and `backend/alembic/versions/0002_listing_removal_audit.py`.
+- Updated: listing-removal model exports, schema readiness, demo seed, app router wiring, shared pagination/structured errors.
+- New: `backend/tests/listings/` lifecycle, role/ownership, validation, rollback, history, concurrency, and OpenAPI tests.
+- Updated/new handoff: README, API contract, database/decision/coverage/status docs, `docs/listing-management.md`, `docs/fixtures/listings.json`, and ERD source/export.
+
+### Actual commands and results
+
+| Command/check | Result |
+|---|---|
+| `git fetch origin main`; `git switch --no-track -c backend/listings-moderation origin/main` | Passed; Phase 3 merge `670953f` confirmed before branch creation |
+| `make migrate` | Passed additive upgrade from `0001_initial_schema` to `0002_listing_removal_audit` |
+| `make seed` | Existing development dataset retained; inserted exactly 1 fake listing_removals row and 0 in every existing table |
+| `make seed` again | Passed: 0 inserts in every table |
+| `make test TEST_PATH=tests/listings/test_validation.py` | Passed: 50 validation/rollback/OpenAPI cases |
+| `make test TEST_PATH=tests/listings` | Passed: 68 Phase 4 tests; real PostgreSQL used for API/constraint/transaction tests |
+| `make verify` | Passed: Ruff, all 172 backend tests on Python 3.12.16, Alembic drift check with no new upgrade operations; 1 existing Starlette/AnyIO deprecation warning |
+| `backend/.venv/bin/ruff format --check backend`; `git diff --check` | Passed |
+| `make openapi` | Passed; 21 new protected Host/Admin operations, typed schemas and errors exported; export remains ignored |
+| Final Swagger form example validation and targeted OpenAPI test | Passed: seven-day hours/rules, media, block, and reason examples validate against request models; OpenAPI regression test passed after example metadata was added |
+| Request fixtures validated against Pydantic models; Markdown links and ERD SVG XML parsed | Passed for all listing form examples and local documentation links |
+| Temporary Uvicorn with `--app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed startup; stopped after live smoke checks |
+| Live Host/Admin reads via urllib | Own paginated listing/detail/amenities, Admin pending/detail/audit, `/ready`, and `/openapi.json` returned 200; money strings/numeric coordinates verified |
+| Live role/ownership/injection checks | Host B reading Host A: 404; Customer on Host route and Host on Admin route: 403; client status injection: JSON 422 with no listing update |
+| Read-only development identity/count query | `vacation_rental_dev`, revision `0002_listing_removal_audit`, 7 users, 12 listings, 18 bookings, 7 reviews, 1 removal record. The seventh user was preexisting and was preserved |
+| Read-only test identity/catalog query | `vacation_rental_test`, 0 public application tables, 0 leftover temporary test schemas |
+
+The first management-only run passed 18 tests; the additional validation/rollback cases then passed, followed by the 68-test Phase 4 gate and complete 172-test regression. Formatting findings were resolved before final gates. No failed or blocked automated check remains.
+
+### Handoff and boundaries
+
+- Backend management/moderation is ready for teammate review with [route/field/state documentation](listing-management.md) and [form fixtures](fixtures/listings.json).
+- Host → Admin → Customer UI integration and manual browser clicks remain unexecuted. The HTTP lifecycle is tested on real isolated PostgreSQL; public Customer search arrives in Phase 5.
+- Listing-first locks are implemented and tested for Phase 4 writers. Booking/cancellation creation and booking-versus-block/moderation races remain Phase 6, using the same lock order.
+- No frontend files, cloud resources, paid services, or unrelated user data were changed. Only generated disposable test schemas were removed by fixture cleanup; databases/volumes and development data were preserved.
+- Existing removals with unknown actors/reasons may retain `removal=null`; the migration deliberately avoids fabricated history.
+- Course timezone/Demo Day, team/board/instructor links, and actual teammate contract approval remain pending.
+- Phase 4 checkpoint commit: `feat: add Host listing management and Admin moderation`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 4 will implement Host listing/media/hours/windows/blocks operations and Admin moderation/audit APIs with ownership, state transitions, and transaction/locking rules. It has not started.
+Phase 5 will implement public approved-listing search, details, amenities, availability, and server quotes, including nightly date/time validation, guest/city/state/ZIP/radius filters, pagination, and shared availability logic for Phase 6 bookings. It has not started.
