@@ -20,14 +20,20 @@ def error_payload(code: str, message: str, details: list[dict[str, str]], reques
 
 async def http_error_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     detail = exc.detail if isinstance(exc.detail, str) else "Request failed"
-    code = "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR"
+    code = getattr(exc, "code", "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR")
     return JSONResponse(
         content=error_payload(code, detail, [], request),
         status_code=exc.status_code,
+        headers=exc.headers,
     )
 
 
 async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    if any(error["type"] == "json_invalid" for error in exc.errors()):
+        return JSONResponse(
+            content=error_payload("INVALID_JSON", "Malformed JSON request", [], request),
+            status_code=400,
+        )
     details = [
         {"field": ".".join(str(part) for part in error["loc"]), "message": error["msg"]}
         for error in exc.errors()
@@ -39,8 +45,12 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled request error", extra={"request_id": request_id(request)})
+    # Exception text/tracebacks can contain SQL row details or credentials.
+    logger.error(
+        "Unhandled request error (%s), request_id=%s", type(exc).__name__, request_id(request)
+    )
     return JSONResponse(
         content=error_payload("INTERNAL_SERVER_ERROR", "Unexpected server error", [], request),
         status_code=500,
+        headers={"X-Request-ID": request_id(request)},
     )

@@ -1,6 +1,6 @@
 # Vacation Rental App
 
-The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–2 provide the foundation, database schema, and demo data; authentication and product APIs are still planned.
+The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–3 provide the foundation, database schema, demo data, registration, JSON login, and JWT/role enforcement. Listing, booking, review, and analytics APIs remain planned.
 
 ## Prerequisites
 
@@ -37,6 +37,7 @@ open http://127.0.0.1:8000/docs
 
 ```bash
 make test TEST_PATH=tests/foundation
+make test TEST_PATH=tests/auth
 make test
 make lint
 make schema-check
@@ -60,15 +61,24 @@ Tests require a local `TEST_DATABASE_URL` naming a separate database ending in `
 
 The dataset contains 1 Admin, 2 Hosts, 3 Customers, 12 listings across 4 ZIP codes, 18 bookings, and 7 eligible past-stay reviews. It also contains all listing states, varied prices/capacities, weekly hours/windows, photos, amenities, date blocks, cancellations, and moderation records. Booking creation timestamps cover the exact 30/60/90-day analytics boundaries and one microsecond on each side, relative to the initial seed time.
 
-Local demo accounts: `admin@example.test`, `host1@example.test`, `host2@example.test`, and `customer1@example.test` through `customer3@example.test`. All use the deliberately public demo password `DemoOnly!2026`, stored only as bcrypt hashes in the database. Login endpoints arrive in Phase 3.
+Local demo accounts: `admin@example.test`, `host1@example.test`, `host2@example.test`, and `customer1@example.test` through `customer3@example.test`. All use the deliberately public demo password `DemoOnly!2026`, stored only as bcrypt hashes in the database. These accounts can now log in through `POST /api/v1/auth/login` using JSON.
 
 The seed CLI refuses cloud/test/production targets and only permits `APP_ENV=development` with the local `vacation_rental_dev` database. The seed uses an anchored timeline; reruns preserve user edits and existing dates. To obtain a newer timeline later, use a separately approved local data-refresh procedure rather than silently resetting data.
+
+## Authentication
+
+Use `/api/v1/auth/register/customer` or `/api/v1/auth/register/host` with name, email, phone, and password. Roles are assigned by the server; Admin signup is not public. Login uses JSON email/password and returns an access token plus the safe user record inside `data`. In Swagger, submit the login example, click **Authorize**, paste `data.access_token`, then call `/api/v1/auth/me`.
+
+Access tokens expire after 60 minutes by default. A blank `JWT_SECRET_KEY` generates a random process key in development/test, so restart/reload invalidates tokens. To keep local tokens across restarts, generate a secret and store it only in the ignored `.env`; an explicit secret of at least 32 bytes is mandatory outside development/test. Do not reuse the older example placeholder.
+
+The basic process-local login limit is 10 attempts per client IP per 60 seconds. Login may return 429 with Retry-After; it is not a distributed limit across future VMs. See the [auth contract and React handoff](docs/authentication.md) for exact request/response examples, validation, 401/403 handling, and deployment limitations.
 
 ## Project documents
 
 - [Implementation status](docs/implementation-status.md)
 - [Design decisions](docs/design-decisions.md)
 - [API contract](docs/api-contract.md)
+- [Authentication and frontend handoff](docs/authentication.md)
 - [Requirement coverage](docs/requirement-coverage.md)
 - [Product backlog](docs/product-backlog.md)
 - [External checks](docs/external-checks.md)

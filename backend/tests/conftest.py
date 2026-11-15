@@ -5,6 +5,8 @@ import pytest
 from app.core.config import Settings, get_settings
 from app.database.safety import validate_test_database_url
 
+pytest_plugins = ["tests.fixtures.database"]
+
 DEVELOPMENT_DATABASE_URL = Settings().database_url
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 if not TEST_DATABASE_URL:

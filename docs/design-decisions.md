@@ -16,6 +16,15 @@
 | 2026-11-15 | Each database test migrates a new UUID schema inside the isolated local test database | Tests exercise real migrations without resets, shared-table truncation, or development connections | Implemented in Phase 2 |
 | 2026-11-15 | Seed deterministic IDs and insert missing rows only; anchor relative dates to initial dataset creation | Reruns neither duplicate nor rewrite demo edits/history; seed CLI refuses nonlocal/nondevelopment targets | Implemented in Phase 2 |
 | 2026-11-15 | bcrypt 5.0.0 hashes the deliberately public local demo password | Produces real hashes for Phase 3 login; no auth endpoints or JWT handling are implemented early | Implemented in Phase 2 |
+| 2026-11-15 | Phase 3 uses JSON login plus HTTPBearer in Swagger | Matches the React contract; does not add an OAuth form-login dependency | Implemented in Phase 3 |
+| 2026-11-15 | PyJWT 2.15.1 with fixed HS256, issuer/audience, required claims and expiry | Rejects unsigned/wrong-algorithm/expired/malformed tokens; current roles are loaded from PostgreSQL per request | Implemented in Phase 3 |
+| 2026-11-15 | Generate an ephemeral process key only for development/test when no signing secret is configured | Avoids a shared public default; restart invalidates local tokens. Nonlocal environments require an explicit key of at least 32 UTF-8 bytes | Implemented in Phase 3 |
+| 2026-11-15 | Validate email syntax without DNS using email-validator 2.4.0; allow .test demo addresses | Trim/lowercase and ASCII-normalize domains consistently; reject internationalized local parts for this prototype | Implemented in Phase 3 |
+| 2026-11-15 | Signup passwords are 8–72 UTF-8 bytes, login 1–72; bcrypt runs in a worker thread | Prevents silent truncation and event-loop blocking; login failures perform bcrypt work for unknown accounts | Implemented in Phase 3 |
+| 2026-11-15 | Enforce a bounded process-local sliding login window (10 attempts/IP/60 seconds by default) | Basic protection within scope; no shared service added. Deployment must add a shared/edge limit and configure trusted proxies | Implemented in Phase 3 |
+| 2026-11-15 | Server assigns signup roles and rejects unknown JSON fields; DB uniqueness handles concurrent normalized emails | Prevents role injection and duplicate-account races; Admin is seed-only | Implemented in Phase 3 |
+| 2026-11-15 | Log unexpected exception class and request ID without raw exception text/SQL parameters | Prevents credentials or password hashes from appearing in failure logs; preserves generic JSON 500 responses and request IDs | Implemented in Phase 3 |
+| 2026-11-15 | Move PostgreSQL migration/seed fixtures into shared test support | Auth and database tests use the same guarded isolated-schema harness; no new migration is needed for auth | Implemented in Phase 3 |
 
 ## Pending external confirmations
 
