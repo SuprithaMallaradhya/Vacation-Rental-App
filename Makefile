@@ -22,7 +22,7 @@ seed:
 	cd backend && ../$(PY) -m seed.demo
 
 api:
-	cd backend && ../$(PY) -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+	cd backend && ../$(PY) -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-proxy-headers
 
 test:
 	cd backend && TEST_DATABASE_URL=$${TEST_DATABASE_URL:-postgresql+asyncpg://vacation:vacation@127.0.0.1:55433/vacation_rental_test} ../$(PY) -m pytest $${TEST_PATH:-tests}

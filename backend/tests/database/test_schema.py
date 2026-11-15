@@ -27,7 +27,7 @@ from app.models import (
 )
 from app.models.enums import ListingStatus, ReservationState, Role
 from seed.demo import DEMO_PASSWORD, demo_id, seed_demo
-from tests.database.conftest import migration_config
+from tests.fixtures.database import migration_config
 
 
 def row_copy(instance, **changes):

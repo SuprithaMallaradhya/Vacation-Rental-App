@@ -101,6 +101,47 @@ Sandboxed database tests initially failed because local TCP access was denied; t
 - Only test-generated UUID schemas were removed; no database, development data, or volume was deleted. Test schemas contain disposable fixtures and are recreated by the suite.
 - Phase 2 checkpoint commit: `feat: add rental schema, migrations, and repeatable demo seed`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 3 — implemented and locally verified
+
+Branch: `backend/auth`, created from `origin/main` at `f389ed3` after the Phase 2 pull request was merged. Local feature branch tracking was cleared so it will not accidentally use `origin/main` as its push target. No teammate changes were present at the start.
+
+Implemented JSON Customer/Host signup, JSON login for Customer/Host/seeded Admin, authenticated `/api/v1/auth/me`, bcrypt hashing/verification in worker threads, validated expiring JWTs, current database role checks, and reusable role/ownership helpers. Signup rejects role/property injection and handles concurrent duplicate normalized email atomically. No schema migration was needed.
+
+Added safe user response models, generic invalid credentials, a bounded process-local login throttle with Retry-After, Swagger HTTP bearer authentication, OpenAPI examples, and React mock JSON fixtures. Local startup disables proxy-header trust. Password/hash values are excluded from responses and validation details; unexpected error logs record only exception class/request ID, and database exceptions hide SQL parameters. JWT signing defaults to a random local process key; explicit strong configuration is required outside development/test.
+
+### Files changed
+
+- New backend modules: `core/security.py`, `core/dependencies.py`, `core/errors.py`, `core/throttle.py`, `routers/auth.py`, `schemas/auth.py`, `schemas/common.py`, and `services/auth.py`, with package initializers.
+- Updated settings/environment example, application factory/router wiring, exception handling, database logging configuration, dependency pins, and Make/Docker startup.
+- New auth tests and shared PostgreSQL fixtures at `backend/tests/fixtures/database.py` (moved from the database-only conftest); database tests now import that shared helper.
+- Updated README, API contract, design decisions, requirement coverage, this status report, and added `docs/authentication.md` plus `docs/fixtures/auth.json`.
+
+### Actual commands and results
+
+| Command/check | Result |
+|---|---|
+| `git fetch origin main`; `git switch -c backend/auth origin/main` | Passed; main includes Phase 2 merge `f389ed3`. Branch upstream was then unset |
+| `backend/.venv/bin/python -m pip install -e 'backend[dev]'` | Passed: pinned PyJWT 2.15.1 and email-validator 2.4.0 installed; official package docs consulted |
+| `make test TEST_PATH=tests/auth/test_security.py` | Initial targeted run passed: 23 unit/security tests |
+| `make test TEST_PATH=tests/auth` | Initial targeted run passed: 61 tests. Two additional fixture/log-safety checks were then added and passed in the full suite |
+| `make verify` | Passed: Ruff, all 104 tests on Python 3.12.16 (63 auth + 28 database + 13 foundation), and Alembic drift check reporting no new upgrade operations |
+| `backend/.venv/bin/ruff format --check backend`; `git diff --check` | Passed |
+| `make openapi` | Passed; exported schema has four auth endpoints, JSON login, documented errors, and HTTP bearer security; export remains ignored |
+| `backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed temporary live startup; server stopped after smoke checks |
+| Live HTTP checks via Python urllib | Customer, Host, and Admin JSON login each returned 200, and their bearer `/auth/me` returned the same safe user. Readiness remained 200 |
+| Live invalid-auth checks | Missing bearer: JSON 401 with WWW-Authenticate; wrong password: generic JSON 401; Admin role injection at Customer signup: JSON 422, without creating a user |
+
+Initial formatting/type-parameter lint findings were corrected before the full gate. The final suite has one existing upstream Starlette/AnyIO deprecation warning; no failed tests or migration drift remain. Registration, role gates, token tampering/expiry, throttling, safe logs, and duplicate races are exercised against the isolated real PostgreSQL test setup. Demo users were not changed by the live smoke checks.
+
+### Frontend handoff and boundaries
+
+- Backend auth is ready for teammate review. [Authentication handoff](authentication.md) describes the base URL/setup, Swagger authorization, fake demo credentials, expiry/401/403 handling, and public mock fixtures.
+- Actual React login and one authenticated request remain pending teammate integration. Swagger's HTTP bearer contract is tested and real bearer requests work; manually clicking the Swagger Authorize UI in a browser was not performed.
+- The login limiter is process-local, not distributed. Shared/edge throttling, proxy trust, HTTPS, and a shared signing secret must be verified before multi-VM deployment. No cloud resources or paid services were introduced.
+- No refresh/logout endpoint or password-reset flow was added. Tokens remain valid until expiry while the user exists; React logout clears its in-memory token.
+- Course timezone/Demo Day, team/board/instructor links, and actual frontend contract approval remain pending.
+- Phase 3 checkpoint commit: `feat: add JSON authentication, JWTs, and role enforcement`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 3 will implement Customer/Host registration, JSON login for all three roles, bcrypt verification, expiring JWTs, `/auth/me`, role/ownership dependencies, login throttling, and the auth frontend contract. It has not started.
+Phase 4 will implement Host listing/media/hours/windows/blocks operations and Admin moderation/audit APIs with ownership, state transitions, and transaction/locking rules. It has not started.
