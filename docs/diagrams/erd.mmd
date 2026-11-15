@@ -11,6 +11,8 @@ erDiagram
     LISTINGS ||--o{ BOOKINGS : retains
     LISTINGS ||--o{ ADMIN_ACTIONS : records
     BOOKINGS ||--o| REVIEWS : receives
+    USERS ||--o{ LISTING_REMOVALS : performs_removal
+    LISTINGS ||--o| LISTING_REMOVALS : terminal_removal
 
     USERS {
         uuid id PK
@@ -108,6 +110,13 @@ erDiagram
         uuid admin_id FK
         uuid listing_id FK
         text action
+        text reason
+        timestamptz created_at
+    }
+    LISTING_REMOVALS {
+        uuid id PK
+        uuid listing_id FK,UK
+        uuid actor_id FK
         text reason
         timestamptz created_at
     }

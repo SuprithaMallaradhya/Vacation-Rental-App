@@ -263,3 +263,14 @@ class AdminAction(UUIDPrimaryKey, CreatedAt, Base):
     listing_id: Mapped[UUID] = mapped_column(ForeignKey("listings.id", ondelete="RESTRICT"))
     action: Mapped[AdminActionType] = mapped_column(enum_type(AdminActionType, "admin_action_type"))
     reason: Mapped[str | None] = mapped_column(Text)
+
+
+class ListingRemoval(UUIDPrimaryKey, CreatedAt, Base):
+    __tablename__ = "listing_removals"
+    __table_args__ = (CheckConstraint("length(btrim(reason)) > 0", name="nonempty_reason"),)
+
+    listing_id: Mapped[UUID] = mapped_column(
+        ForeignKey("listings.id", ondelete="RESTRICT"), unique=True
+    )
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    reason: Mapped[str] = mapped_column(Text)

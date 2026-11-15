@@ -1,0 +1,49 @@
+{
+  "note": "Form examples only; resource UUIDs come from actual API responses. Create starts PENDING and needs all approval fields.",
+  "create_request": {
+    "name": "Sunny San Jose Home",
+    "description": "A fictional entire-home rental for the course demo.",
+    "address_line1": "100 Example Lane",
+    "city": "San Jose",
+    "state": "CA",
+    "zip_code": "95112",
+    "latitude": "37.338200",
+    "longitude": "-121.886300",
+    "timezone": "America/Los_Angeles",
+    "nightly_price": "150.00",
+    "max_guests": 4,
+    "contact_name": "Demo Host",
+    "contact_email": "host1@example.test",
+    "contact_phone": "+15550100123",
+    "media": [{"url": "https://placehold.co/800x600", "media_type": "IMAGE", "caption": "Demo photo", "sort_order": 0}]
+  },
+  "hours_request": {
+    "hours": [
+      {"weekday": 0, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 1, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 2, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 3, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 4, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 5, "closed": false, "opening_time": "09:00", "closing_time": "18:00"},
+      {"weekday": 6, "closed": true}
+    ]
+  },
+  "booking_rules_request": {
+    "booking_rules": [
+      {"weekday": 0, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 1, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 2, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 3, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 4, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 5, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"},
+      {"weekday": 6, "arrival_allowed": true, "arrival_start": "15:00", "arrival_end": "22:00", "arrival_default": "15:00", "departure_allowed": true, "departure_start": "07:00", "departure_end": "11:00", "departure_default": "11:00"}
+    ]
+  },
+  "price_patch": {"nightly_price": "175.00"},
+  "material_patch": {"name": "Updated Sunny San Jose Home"},
+  "add_media_request": {"url": "https://placehold.co/800x600?text=Second+Photo", "media_type": "IMAGE", "sort_order": 1},
+  "patch_media_request": {"caption": "Updated photo caption", "sort_order": 2},
+  "block_request": {"start_date": "2030-01-10", "end_date": "2030-01-13", "reason": "Maintenance"},
+  "reject_request": {"reason": "Please complete the listing description"},
+  "remove_request": {"reason": "Rental is no longer offered"}
+}
