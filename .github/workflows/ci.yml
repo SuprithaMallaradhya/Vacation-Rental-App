@@ -14,7 +14,7 @@ jobs:
           POSTGRES_USER: vacation
           POSTGRES_PASSWORD: vacation
           POSTGRES_DB: vacation_rental_test
-        ports: ["5433:5432"]
+        ports: ["55433:5432"]
         options: >-
           --health-cmd "pg_isready -U vacation -d vacation_rental_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
@@ -28,4 +28,4 @@ jobs:
       - run: python -m ruff check backend
       - run: python -m pytest backend/tests
         env:
-          TEST_DATABASE_URL: postgresql+asyncpg://vacation:vacation@localhost:5433/vacation_rental_test
+          TEST_DATABASE_URL: postgresql+asyncpg://vacation:vacation@127.0.0.1:55433/vacation_rental_test

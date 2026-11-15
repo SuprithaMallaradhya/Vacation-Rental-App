@@ -1,0 +1,113 @@
+erDiagram
+    USERS ||--o{ LISTINGS : hosts
+    USERS ||--o{ BOOKINGS : reserves
+    USERS ||--o{ ADMIN_ACTIONS : performs
+    LISTINGS ||--o{ LISTING_HOURS : contact_hours
+    LISTINGS ||--o{ LISTING_BOOKING_RULES : stay_windows
+    LISTINGS ||--o{ LISTING_MEDIA : shows
+    LISTINGS ||--o{ LISTING_AMENITIES : has
+    AMENITIES ||--o{ LISTING_AMENITIES : offers
+    LISTINGS ||--o{ AVAILABILITY_BLOCKS : blocks
+    LISTINGS ||--o{ BOOKINGS : retains
+    LISTINGS ||--o{ ADMIN_ACTIONS : records
+    BOOKINGS ||--o| REVIEWS : receives
+
+    USERS {
+        uuid id PK
+        text email UK
+        text password_hash
+        text role "CUSTOMER HOST ADMIN"
+        timestamptz created_at
+    }
+    LISTINGS {
+        uuid id PK
+        uuid host_id FK
+        text name
+        text address_line1
+        text city
+        text state
+        text zip_code
+        numeric latitude
+        numeric longitude
+        text timezone
+        numeric nightly_price
+        text status "PENDING APPROVED REJECTED REMOVED"
+        timestamptz removed_at
+    }
+    LISTING_HOURS {
+        uuid id PK
+        uuid listing_id FK
+        int weekday "unique with listing_id"
+        bool closed
+        time opening_time
+        time closing_time
+    }
+    LISTING_BOOKING_RULES {
+        uuid id PK
+        uuid listing_id FK
+        int weekday "unique with listing_id"
+        bool arrival_allowed
+        time arrival_start
+        time arrival_end
+        time arrival_default
+        bool departure_allowed
+        time departure_start
+        time departure_end
+        time departure_default
+    }
+    LISTING_MEDIA {
+        uuid id PK
+        uuid listing_id FK
+        text url "HTTPS"
+        text media_type
+        int sort_order
+    }
+    AMENITIES {
+        uuid id PK
+        text name UK
+    }
+    LISTING_AMENITIES {
+        uuid listing_id PK,FK
+        uuid amenity_id PK,FK
+    }
+    AVAILABILITY_BLOCKS {
+        uuid id PK
+        uuid listing_id FK
+        date start_date
+        date end_date
+        text reason
+    }
+    BOOKINGS {
+        uuid id PK
+        uuid listing_id FK
+        uuid customer_id FK
+        date check_in
+        date check_out
+        timestamptz arrival_at
+        timestamptz departure_at
+        int guests
+        numeric nightly_price_snapshot
+        numeric total_cost
+        text currency
+        text listing_name_snapshot
+        text listing_address_snapshot
+        text listing_zip_snapshot
+        text listing_timezone_snapshot
+        text reservation_state "CONFIRMED CANCELLED"
+        timestamptz cancelled_at
+        timestamptz created_at
+    }
+    REVIEWS {
+        uuid id PK
+        uuid booking_id FK,UK
+        int rating "1 to 5"
+        text comment
+    }
+    ADMIN_ACTIONS {
+        uuid id PK
+        uuid admin_id FK
+        uuid listing_id FK
+        text action
+        text reason
+        timestamptz created_at
+    }

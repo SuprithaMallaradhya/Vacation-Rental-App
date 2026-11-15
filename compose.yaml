@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: vacation
       POSTGRES_PASSWORD: vacation
       POSTGRES_DB: vacation_rental_dev
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:55432:5432"]
     volumes: ["postgres-dev-data:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vacation -d vacation_rental_dev"]
@@ -18,7 +18,7 @@ services:
       POSTGRES_USER: vacation
       POSTGRES_PASSWORD: vacation
       POSTGRES_DB: vacation_rental_test
-    ports: ["5433:5432"]
+    ports: ["127.0.0.1:55433:5432"]
     volumes: ["postgres-test-data:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vacation -d vacation_rental_test"]

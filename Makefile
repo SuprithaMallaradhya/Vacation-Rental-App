@@ -10,24 +10,22 @@ setup:
 	$(PIP) install -e 'backend[dev]'
 
 db-up:
-	docker compose up -d postgres-dev postgres-test
+	docker compose up -d --wait postgres-dev postgres-test
 
 db-down:
 	docker compose stop postgres-dev postgres-test
 
 migrate:
-	@echo "Phase 2: migrations are not implemented yet."
-	@exit 1
+	cd backend && ../$(PY) -m alembic upgrade head
 
 seed:
-	@echo "Phase 2: seed data is not implemented yet."
-	@exit 1
+	cd backend && ../$(PY) -m seed.demo
 
 api:
 	cd backend && ../$(PY) -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 test:
-	cd backend && TEST_DATABASE_URL=$${TEST_DATABASE_URL:-postgresql+asyncpg://vacation:vacation@localhost:5433/vacation_rental_test} ../$(PY) -m pytest $${TEST_PATH:-tests}
+	cd backend && TEST_DATABASE_URL=$${TEST_DATABASE_URL:-postgresql+asyncpg://vacation:vacation@127.0.0.1:55433/vacation_rental_test} ../$(PY) -m pytest $${TEST_PATH:-tests}
 
 lint:
 	$(PY) -m ruff check backend
@@ -35,7 +33,10 @@ lint:
 openapi:
 	cd backend && ../$(PY) -c 'import json; from app.main import app; print(json.dumps(app.openapi(), indent=2))' > ../docs/openapi.json
 
-verify: lint test
+schema-check:
+	cd backend && ../$(PY) -m alembic check
+
+verify: lint test schema-check
 
 prod-local-up:
 	@echo "Phase 10: production-like proxy/UI packaging is not implemented yet."
