@@ -1,0 +1,137 @@
+import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import Layout, { RequireAuth } from './components/Layout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Search from './pages/Search';
+import ListingDetail from './pages/ListingDetail';
+import MyBookings from './pages/MyBookings';
+import BookingDetail from './pages/BookingDetail';
+import Checkout from './pages/Checkout';
+import ReviewPage from './pages/ReviewPage';
+import HostAnalytics from './pages/host/HostAnalytics';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import HostListings from './pages/host/HostListings';
+import ListingEditor from './pages/host/ListingEditor';
+import AdminListings from './pages/admin/AdminListings';
+import AdminListingDetail from './pages/admin/AdminListingDetail';
+import AdminAudit from './pages/admin/AdminAudit';
+
+function NotFound() {
+  return (
+    <div className="card empty">
+      <h3>Page not found</h3>
+      <p>The page you are looking for does not exist.</p>
+      <Link to="/" className="btn">
+        Back to Explore
+      </Link>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        {/* Public */}
+        <Route index element={<Search />} />
+        <Route path="listings/:id" element={<ListingDetail />} />
+        <Route
+          path="listings/:id/book"
+          element={
+            <RequireAuth roles={['CUSTOMER']}>
+              <Checkout />
+            </RequireAuth>
+          }
+        />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+
+        {/* Customer */}
+        <Route
+          path="bookings"
+          element={
+            <RequireAuth roles={['CUSTOMER']}>
+              <MyBookings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="bookings/:id"
+          element={
+            <RequireAuth roles={['CUSTOMER']}>
+              <BookingDetail />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="bookings/:id/review"
+          element={
+            <RequireAuth roles={['CUSTOMER']}>
+              <ReviewPage />
+            </RequireAuth>
+          }
+        />
+
+        {/* Host */}
+        <Route path="host" element={<Navigate to="/host/listings" replace />} />
+        <Route
+          path="host/listings"
+          element={
+            <RequireAuth roles={['HOST']}>
+              <HostListings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="host/listings/new"
+          element={
+            <RequireAuth roles={['HOST']}>
+              <ListingEditor />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="host/listings/:id"
+          element={
+            <RequireAuth roles={['HOST']}>
+              <ListingEditor />
+            </RequireAuth>
+          }
+        />
+
+        <Route path="host/analytics" element={<RequireAuth roles={['HOST']}><HostAnalytics /></RequireAuth>} />
+
+        {/* Admin */}
+        <Route path="admin/analytics" element={<RequireAuth roles={['ADMIN']}><AdminAnalytics /></RequireAuth>} />
+        <Route path="admin" element={<Navigate to="/admin/listings" replace />} />
+        <Route
+          path="admin/listings"
+          element={
+            <RequireAuth roles={['ADMIN']}>
+              <AdminListings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="admin/listings/:id"
+          element={
+            <RequireAuth roles={['ADMIN']}>
+              <AdminListingDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="admin/audit"
+          element={
+            <RequireAuth roles={['ADMIN']}>
+              <AdminAudit />
+            </RequireAuth>
+          }
+        />
+
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  );
+}
