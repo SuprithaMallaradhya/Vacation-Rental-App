@@ -216,6 +216,9 @@ async def test_openapi_host_admin_security_and_json_contract(api):
         if path_name.startswith(("/api/v1/host/", "/api/v1/admin/"))
         for method, operation in methods.items()
         if method in {"get", "post", "patch", "put", "delete"}
+        # Keep this Phase 4 contract focused on management/moderation. Analytics
+        # uses these prefixes too and has its own role/error/OpenAPI coverage.
+        and set(operation.get("tags", [])) & {"host listings", "admin moderation"}
     ]
     assert len(operations) == 21
     for operation in operations:

@@ -330,6 +330,51 @@ The [review guide](reviews.md) and [mock JSON](fixtures/reviews.json) are ready 
 
 No frontend, cloud resource, paid service, or unrelated development data was changed. The user subsequently authorized committing and pushing Phase 7 on `backend/reviews-ratings`. Checkpoint message: `feat: add completed-stay reviews and public listing ratings`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 8 — implemented and locally verified
+
+Branch: `backend/host-admin-analytics`, created without upstream tracking from merged `origin/main` at `89fdea6` (Phase 7 merge). Verified `343d9d8` is an ancestor of main; the tree was clean before implementation. The implementation was initially handed off without a commit or push.
+
+Implemented GET `/api/v1/host/analytics` (HOST, owner scope from auth) and GET `/api/v1/admin/analytics` (ADMIN, system scope). Only period_days=30|60|90 (default 30) and optional exact text ZIP/ZIP+4 are accepted; injected owner/time fields are rejected. Responses include exact rolling UTC bounds, current inventory/status counts including removed, new listings, creation-window booking/cancellation/net counts and noncancelled saved booking value, sorted ZIP breakdowns and zero-filled UTC-date buckets.
+
+Listing metrics use current ZIP; booking metrics use saved ZIP/price and current cancellation state. Completed/removed/moved listing history is retained, current price changes cannot rewrite booking value, and recent cancellations of older out-of-window creations do not become in-window events. Labels explicitly distinguish booking value from paid revenue. Both grouped populations are read in one PostgreSQL UNION ALL statement/snapshot; all booking totals/day/ZIP values derive from the same rows without child joins or N+1 reads.
+
+Daily calendar buckets are clipped to exact rolling bounds. Midnight windows touch period_days dates; non-midnight windows normally touch period_days+1 with partial first/last dates. Each date is retained for reconciliation rather than silently changing the reporting window. All money is two-decimal strings, including zero, and summed values may exceed a single booking's NUMERIC range.
+
+### Files changed
+
+- Added `backend/app/routers/analytics.py`, `schemas/analytics.py`, `services/analytics.py`; updated app router wiring.
+- Added `backend/tests/analytics/` (55 cases): guarded API fixtures, hand-calculated scoped data, all window boundaries/periods, UTC/session/listing timezone independence, ZIP/ZIP+4, cancellation/removed/completed history, price snapshots, empty/large totals, injection/privacy/role/schema checks and reconciliation.
+- Updated the older `backend/tests/listings/test_validation.py` OpenAPI check to select its 21 Phase 4 management/moderation operations by tags. New analytics operations have their own role/error/schema tests; no original security assertion was removed.
+- Added `docs/analytics.md`, `docs/fixtures/analytics.json` (complete 30-day Host/Admin/empty chart examples); updated README, API contract, coverage, decisions, phase audit, and this status document.
+- No schema/model/migration/dependency/environment/CI change was needed. Head remains `0002_listing_removal_audit`. Existing CI discovers all new tests.
+
+### Actual commands and results
+
+| Command/check | Actual result |
+|---|---|
+| `git fetch origin`; `git merge-base --is-ancestor 343d9d8 origin/main`; `git switch --no-track -c backend/host-admin-analytics origin/main` | Passed: merged Phase 7 at `89fdea6`, clean new branch |
+| Initial `make test TEST_PATH=tests/analytics` | 52 passed, 1 failed: the synthetic approved listing used for an actual price PATCH lacked approval-required child form rows; production correctly rejected that incomplete fixture with 422 |
+| Complete fixture and `make test TEST_PATH=tests/analytics` | Passed: all 55 tests, including two added real-owner injection/privacy and ZIP+4/all-cancelled cases |
+| Initial full `make verify` | Ruff passed; 427 tests passed, 1 failed because the old Phase 4 OpenAPI count included the two new analytics operations (23 versus its expected 21); drift check not reached |
+| Targeted Phase 4 OpenAPI test after scoping by management/moderation tags | Passed: all 21 management operations retain their original bearer/error/JSON contract assertions |
+| Final `make verify` | Passed: Ruff, all 428 backend tests on Python 3.12.16, and Alembic check with no new upgrade operations; one existing Starlette/AnyIO deprecation warning |
+| `make openapi`; plan-to-schema method/path comparison | Passed: all 36 planned Phase 3–8 product operations plus protected Host amenities (37 total); operational health/readiness present |
+| Fixture/schema validation and example reconciliation | Passed: period requests, Host/Admin/empty/error models, complete 30-date arrays, exact bounds/contiguity and all root/day/ZIP totals |
+| Temporary `backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed startup/shutdown after smoke checks |
+| Live urllib HTTP checks | Health/readiness/docs/ReDoc/OpenAPI and both role scopes at 30/60/90: 200, money strings and chart reconciliation verified. ZIP 02108 preserved; unmatched 00000 returns zero data. Missing auth: 401; cross-role/Customer requests: 403; bad period/owner injection: 422, shared JSON/request IDs verified |
+| `docker compose ps`; read-only development counts | Both services healthy; `vacation_rental_dev`, revision `0002_listing_removal_audit`, 7 users, 12 listings, 18 bookings, 7 reviews, 1 removal, existing data preserved |
+| `backend/.venv/bin/ruff format --check backend`; `git diff --check` | Passed: 91 Python files formatted, no whitespace errors |
+| Final review of all 18 changed/new project files | Local Markdown links/JSON parsed, common secret-signature scan had no matches; frontend/ignored private files excluded and Git index empty |
+| Final read-only test identity/catalog SQL | `vacation_rental_test`, 0 public tables, 0 leftover temporary test schemas |
+
+The initial unused test imports were removed after lint feedback. The incomplete-fixture and legacy operation-count failures above were corrected without weakening production validation or dropping checks. No analytics metric/API test failure remains. Remote GitHub CI and shared manual React dashboard/browser acceptance are unexecuted; local passes do not imply either.
+
+### Handoff and checkpoint
+
+The [analytics guide](analytics.md) defines exact metrics/chart dates, the Host/Admin Swagger walkthrough, role errors, and saved/current ZIP distinctions; [JSON fixtures](fixtures/analytics.json) provide complete chart data. The [phase audit](phase-acceptance.md) now covers Phases 0–8 and explicitly retains pending shared UI/demo data, course/timezone/evaluation details, Maps credentials/allowance, and process links/evidence. No frontend files, cloud resources, paid services, or development records were changed by this work; live checks only logged in and read metrics.
+
+The user subsequently authorized committing and pushing Phase 8 on `backend/host-admin-analytics`. Checkpoint message: `feat: add scoped Host and Admin analytics with UTC charts`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 8 will implement Host/Admin analytics with exact UTC 30/60/90-day windows, owner scoping, ZIP rules, booking-value/cancellation metrics and zero-filled daily buckets, tested against boundary fixtures. Phase 8 has not started.
+Phase 9 is shared React/API and actual Google address/map integration. It requires the teammate's existing React source and agreed provider access/allowance for live verification; backend Phases 0–8 do not establish UI acceptance. No duplicate frontend or paid service activation is authorized, and Phase 9 has not started. Production-like packaging/templates remain Phase 10.

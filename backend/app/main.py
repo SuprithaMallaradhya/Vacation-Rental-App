@@ -16,6 +16,7 @@ from app.middleware.errors import (
 )
 from app.middleware.request_id import RequestIDMiddleware
 from app.routers.admin import router as admin_router
+from app.routers.analytics import router as analytics_router
 from app.routers.auth import router as auth_router
 from app.routers.bookings import router as bookings_router
 from app.routers.health import router as health_router
@@ -63,6 +64,7 @@ def create_app() -> FastAPI:
     application.include_router(listings_router, prefix="/api/v1")
     application.include_router(bookings_router, prefix="/api/v1")
     application.include_router(reviews_router, prefix="/api/v1")
+    application.include_router(analytics_router, prefix="/api/v1")
     return application
 
 

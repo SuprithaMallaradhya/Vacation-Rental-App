@@ -1,6 +1,6 @@
 # Requirement coverage
 
-Coverage reflects implemented backend Phases 0–7. See the [phase acceptance audit](phase-acceptance.md) for checkpoint evidence and remaining shared/external work. Analytics and shared frontend acceptance remain explicitly pending.
+Coverage reflects implemented backend Phases 0–8. See the [phase acceptance audit](phase-acceptance.md) for checkpoint evidence and remaining shared/external work. Shared frontend/Google integration and later deployment/evidence remain pending.
 
 | ID | Requirement | Planning evidence | Current implementation/evidence |
 |---|---|---|---|
@@ -14,10 +14,10 @@ Coverage reflects implemented backend Phases 0–7. See the [phase acceptance au
 | R08 | Cancellation | Backlog item BOOK-02 | Phase 6 owner-only future cancellation, exact arrival cutoff, idempotent repeats, released nights, rollback, removed-listing history and cancellation/rebooking concurrency tested; React flow pending |
 | R09 | Past-stay reviews | Backlog item REVIEW-01 | Phase 7 `routers/reviews.py`, `schemas/reviews.py`, `services/reviews.py`, and `tests/reviews/`: owned checked-out noncancelled eligibility, one review per booking, strict rating/comments, shared aggregates, public privacy/pagination, duplicate concurrency and rollback tested; React/manual demo acceptance pending |
 | R10–R11 | Host add/remove/view/update own listings and nested resources | Backlog item LIST-01 | Phase 4 `routers/host.py`, `schemas/listings.py`, `services/listings.py`, and `tests/listings/`; history and nested ownership verified |
-| R12 | Host own analytics | Backlog item ANALYTICS-01 | Phase 8 |
+| R12 | Host own analytics | Backlog item ANALYTICS-01 | Phase 8 `routers/analytics.py`, `schemas/analytics.py`, `services/analytics.py`, `tests/analytics/`: auth-derived Host scope, 30/60/90 UTC windows, exact boundaries, current versus snapshot ZIPs, cancellation/value/history rules, chart reconciliation/zero filling, role/injection tests; UI acceptance pending |
 | R13 | Admin approve/reject/remove listings and audit | Backlog item LIST-01 | Phase 4 `routers/admin.py`, approval validation, atomic audit/rollback, removal history, and tests implemented |
-| R14 | Admin analytics | Backlog item ANALYTICS-01 | Phase 8 |
-| R15 | Backend/frontend role access | Backlog item AUTH-01 | Phase 3 auth, Phase 4 Host/Admin ownership, Phase 6 private Customer bookings, Phase 7 owned Customer review writes/public privacy and indistinguishable missing/foreign errors tested; React acceptance pending |
+| R14 | Admin analytics | Backlog item ANALYTICS-01 | Phase 8 system-wide metrics, status/current/new listing counts, grouped saved booking counts/value, daily/ZIP breakdowns, hand-calculated fixtures and Host-scope additive comparisons; UI acceptance pending |
+| R15 | Backend/frontend role access | Backlog item AUTH-01 | Phase 3 auth, Phase 4 Host/Admin ownership, Phase 6 private bookings, Phase 7 owned review writes/public privacy, Phase 8 analytics role/owner scope and injected-scope denial tested; React acceptance pending |
 | R16 | Azure architecture | `docs/external-checks.md` | No provisioning authorized in Phase 1 |
 | R17 | Database/mock listings | Backlog items DB-01/DB-02 | Phase 2 implemented: `backend/app/models/`, initial Alembic revision, `backend/seed/demo.py`; 28 PostgreSQL tests pass |
 | R18–R21 | Ownership, Scrum evidence, diagrams, final README | `docs/product-backlog.md` and placeholders | Ongoing; no fabricated evidence |

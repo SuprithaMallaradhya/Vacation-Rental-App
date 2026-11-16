@@ -1,0 +1,963 @@
+{
+  "note": "Illustrative dashboard fixtures, not live metrics or real contribution evidence. Full arrays use a midnight window with 30 UTC dates; non-midnight live windows normally have 31 dates.",
+  "query_examples": [
+    {
+      "period_days": 30
+    },
+    {
+      "period_days": 60,
+      "zip_code": "02108"
+    },
+    {
+      "period_days": 90
+    }
+  ],
+  "host_success": {
+    "success": true,
+    "data": {
+      "scope": "HOST",
+      "period_days": 30,
+      "zip_code": null,
+      "window_start": "2026-10-17T00:00:00Z",
+      "window_end": "2026-11-16T00:00:00Z",
+      "timezone": "UTC",
+      "currency": "USD",
+      "total_listings": 2,
+      "listing_status_counts": {
+        "PENDING": 0,
+        "APPROVED": 1,
+        "REJECTED": 0,
+        "REMOVED": 1
+      },
+      "new_listings_in_period": 1,
+      "rentals_by_zip": [
+        {
+          "zip_code": "90012",
+          "total_listings": 1
+        },
+        {
+          "zip_code": "95112",
+          "total_listings": 1
+        }
+      ],
+      "bookings_created": 2,
+      "cancelled_bookings": 1,
+      "net_bookings": 1,
+      "booking_value_usd": "100.10",
+      "bookings_by_zip": [
+        {
+          "zip_code": "95112",
+          "bookings_created": 2,
+          "cancelled_bookings": 1,
+          "net_bookings": 1,
+          "booking_value_usd": "100.10"
+        }
+      ],
+      "daily_bookings": [
+        {
+          "date": "2026-10-17",
+          "window_start": "2026-10-17T00:00:00Z",
+          "window_end": "2026-10-18T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-18",
+          "window_start": "2026-10-18T00:00:00Z",
+          "window_end": "2026-10-19T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-19",
+          "window_start": "2026-10-19T00:00:00Z",
+          "window_end": "2026-10-20T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-20",
+          "window_start": "2026-10-20T00:00:00Z",
+          "window_end": "2026-10-21T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-21",
+          "window_start": "2026-10-21T00:00:00Z",
+          "window_end": "2026-10-22T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-22",
+          "window_start": "2026-10-22T00:00:00Z",
+          "window_end": "2026-10-23T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-23",
+          "window_start": "2026-10-23T00:00:00Z",
+          "window_end": "2026-10-24T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-24",
+          "window_start": "2026-10-24T00:00:00Z",
+          "window_end": "2026-10-25T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-25",
+          "window_start": "2026-10-25T00:00:00Z",
+          "window_end": "2026-10-26T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-26",
+          "window_start": "2026-10-26T00:00:00Z",
+          "window_end": "2026-10-27T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-27",
+          "window_start": "2026-10-27T00:00:00Z",
+          "window_end": "2026-10-28T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-28",
+          "window_start": "2026-10-28T00:00:00Z",
+          "window_end": "2026-10-29T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-29",
+          "window_start": "2026-10-29T00:00:00Z",
+          "window_end": "2026-10-30T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-30",
+          "window_start": "2026-10-30T00:00:00Z",
+          "window_end": "2026-10-31T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-31",
+          "window_start": "2026-10-31T00:00:00Z",
+          "window_end": "2026-11-01T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-01",
+          "window_start": "2026-11-01T00:00:00Z",
+          "window_end": "2026-11-02T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-02",
+          "window_start": "2026-11-02T00:00:00Z",
+          "window_end": "2026-11-03T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-03",
+          "window_start": "2026-11-03T00:00:00Z",
+          "window_end": "2026-11-04T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-04",
+          "window_start": "2026-11-04T00:00:00Z",
+          "window_end": "2026-11-05T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-05",
+          "window_start": "2026-11-05T00:00:00Z",
+          "window_end": "2026-11-06T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-06",
+          "window_start": "2026-11-06T00:00:00Z",
+          "window_end": "2026-11-07T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-07",
+          "window_start": "2026-11-07T00:00:00Z",
+          "window_end": "2026-11-08T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-08",
+          "window_start": "2026-11-08T00:00:00Z",
+          "window_end": "2026-11-09T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-09",
+          "window_start": "2026-11-09T00:00:00Z",
+          "window_end": "2026-11-10T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-10",
+          "window_start": "2026-11-10T00:00:00Z",
+          "window_end": "2026-11-11T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-11",
+          "window_start": "2026-11-11T00:00:00Z",
+          "window_end": "2026-11-12T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-12",
+          "window_start": "2026-11-12T00:00:00Z",
+          "window_end": "2026-11-13T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-13",
+          "window_start": "2026-11-13T00:00:00Z",
+          "window_end": "2026-11-14T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-14",
+          "window_start": "2026-11-14T00:00:00Z",
+          "window_end": "2026-11-15T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-15",
+          "window_start": "2026-11-15T00:00:00Z",
+          "window_end": "2026-11-16T00:00:00Z",
+          "bookings_created": 2,
+          "cancelled_bookings": 1,
+          "net_bookings": 1,
+          "booking_value_usd": "100.10"
+        }
+      ]
+    }
+  },
+  "admin_success": {
+    "success": true,
+    "data": {
+      "scope": "ADMIN",
+      "period_days": 30,
+      "zip_code": null,
+      "window_start": "2026-10-17T00:00:00Z",
+      "window_end": "2026-11-16T00:00:00Z",
+      "timezone": "UTC",
+      "currency": "USD",
+      "total_listings": 3,
+      "listing_status_counts": {
+        "PENDING": 1,
+        "APPROVED": 1,
+        "REJECTED": 0,
+        "REMOVED": 1
+      },
+      "new_listings_in_period": 2,
+      "rentals_by_zip": [
+        {
+          "zip_code": "02108",
+          "total_listings": 1
+        },
+        {
+          "zip_code": "90012",
+          "total_listings": 1
+        },
+        {
+          "zip_code": "95112",
+          "total_listings": 1
+        }
+      ],
+      "bookings_created": 3,
+      "cancelled_bookings": 1,
+      "net_bookings": 2,
+      "booking_value_usd": "300.30",
+      "bookings_by_zip": [
+        {
+          "zip_code": "02108",
+          "bookings_created": 1,
+          "cancelled_bookings": 0,
+          "net_bookings": 1,
+          "booking_value_usd": "200.20"
+        },
+        {
+          "zip_code": "95112",
+          "bookings_created": 2,
+          "cancelled_bookings": 1,
+          "net_bookings": 1,
+          "booking_value_usd": "100.10"
+        }
+      ],
+      "daily_bookings": [
+        {
+          "date": "2026-10-17",
+          "window_start": "2026-10-17T00:00:00Z",
+          "window_end": "2026-10-18T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-18",
+          "window_start": "2026-10-18T00:00:00Z",
+          "window_end": "2026-10-19T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-19",
+          "window_start": "2026-10-19T00:00:00Z",
+          "window_end": "2026-10-20T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-20",
+          "window_start": "2026-10-20T00:00:00Z",
+          "window_end": "2026-10-21T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-21",
+          "window_start": "2026-10-21T00:00:00Z",
+          "window_end": "2026-10-22T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-22",
+          "window_start": "2026-10-22T00:00:00Z",
+          "window_end": "2026-10-23T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-23",
+          "window_start": "2026-10-23T00:00:00Z",
+          "window_end": "2026-10-24T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-24",
+          "window_start": "2026-10-24T00:00:00Z",
+          "window_end": "2026-10-25T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-25",
+          "window_start": "2026-10-25T00:00:00Z",
+          "window_end": "2026-10-26T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-26",
+          "window_start": "2026-10-26T00:00:00Z",
+          "window_end": "2026-10-27T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-27",
+          "window_start": "2026-10-27T00:00:00Z",
+          "window_end": "2026-10-28T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-28",
+          "window_start": "2026-10-28T00:00:00Z",
+          "window_end": "2026-10-29T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-29",
+          "window_start": "2026-10-29T00:00:00Z",
+          "window_end": "2026-10-30T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-30",
+          "window_start": "2026-10-30T00:00:00Z",
+          "window_end": "2026-10-31T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-31",
+          "window_start": "2026-10-31T00:00:00Z",
+          "window_end": "2026-11-01T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-01",
+          "window_start": "2026-11-01T00:00:00Z",
+          "window_end": "2026-11-02T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-02",
+          "window_start": "2026-11-02T00:00:00Z",
+          "window_end": "2026-11-03T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-03",
+          "window_start": "2026-11-03T00:00:00Z",
+          "window_end": "2026-11-04T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-04",
+          "window_start": "2026-11-04T00:00:00Z",
+          "window_end": "2026-11-05T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-05",
+          "window_start": "2026-11-05T00:00:00Z",
+          "window_end": "2026-11-06T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-06",
+          "window_start": "2026-11-06T00:00:00Z",
+          "window_end": "2026-11-07T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-07",
+          "window_start": "2026-11-07T00:00:00Z",
+          "window_end": "2026-11-08T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-08",
+          "window_start": "2026-11-08T00:00:00Z",
+          "window_end": "2026-11-09T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-09",
+          "window_start": "2026-11-09T00:00:00Z",
+          "window_end": "2026-11-10T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-10",
+          "window_start": "2026-11-10T00:00:00Z",
+          "window_end": "2026-11-11T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-11",
+          "window_start": "2026-11-11T00:00:00Z",
+          "window_end": "2026-11-12T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-12",
+          "window_start": "2026-11-12T00:00:00Z",
+          "window_end": "2026-11-13T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-13",
+          "window_start": "2026-11-13T00:00:00Z",
+          "window_end": "2026-11-14T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-14",
+          "window_start": "2026-11-14T00:00:00Z",
+          "window_end": "2026-11-15T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-15",
+          "window_start": "2026-11-15T00:00:00Z",
+          "window_end": "2026-11-16T00:00:00Z",
+          "bookings_created": 3,
+          "cancelled_bookings": 1,
+          "net_bookings": 2,
+          "booking_value_usd": "300.30"
+        }
+      ]
+    }
+  },
+  "empty_success": {
+    "success": true,
+    "data": {
+      "scope": "HOST",
+      "period_days": 30,
+      "zip_code": "00000",
+      "window_start": "2026-10-17T00:00:00Z",
+      "window_end": "2026-11-16T00:00:00Z",
+      "timezone": "UTC",
+      "currency": "USD",
+      "total_listings": 0,
+      "listing_status_counts": {
+        "PENDING": 0,
+        "APPROVED": 0,
+        "REJECTED": 0,
+        "REMOVED": 0
+      },
+      "new_listings_in_period": 0,
+      "rentals_by_zip": [],
+      "bookings_created": 0,
+      "cancelled_bookings": 0,
+      "net_bookings": 0,
+      "booking_value_usd": "0.00",
+      "bookings_by_zip": [],
+      "daily_bookings": [
+        {
+          "date": "2026-10-17",
+          "window_start": "2026-10-17T00:00:00Z",
+          "window_end": "2026-10-18T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-18",
+          "window_start": "2026-10-18T00:00:00Z",
+          "window_end": "2026-10-19T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-19",
+          "window_start": "2026-10-19T00:00:00Z",
+          "window_end": "2026-10-20T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-20",
+          "window_start": "2026-10-20T00:00:00Z",
+          "window_end": "2026-10-21T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-21",
+          "window_start": "2026-10-21T00:00:00Z",
+          "window_end": "2026-10-22T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-22",
+          "window_start": "2026-10-22T00:00:00Z",
+          "window_end": "2026-10-23T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-23",
+          "window_start": "2026-10-23T00:00:00Z",
+          "window_end": "2026-10-24T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-24",
+          "window_start": "2026-10-24T00:00:00Z",
+          "window_end": "2026-10-25T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-25",
+          "window_start": "2026-10-25T00:00:00Z",
+          "window_end": "2026-10-26T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-26",
+          "window_start": "2026-10-26T00:00:00Z",
+          "window_end": "2026-10-27T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-27",
+          "window_start": "2026-10-27T00:00:00Z",
+          "window_end": "2026-10-28T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-28",
+          "window_start": "2026-10-28T00:00:00Z",
+          "window_end": "2026-10-29T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-29",
+          "window_start": "2026-10-29T00:00:00Z",
+          "window_end": "2026-10-30T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-30",
+          "window_start": "2026-10-30T00:00:00Z",
+          "window_end": "2026-10-31T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-10-31",
+          "window_start": "2026-10-31T00:00:00Z",
+          "window_end": "2026-11-01T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-01",
+          "window_start": "2026-11-01T00:00:00Z",
+          "window_end": "2026-11-02T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-02",
+          "window_start": "2026-11-02T00:00:00Z",
+          "window_end": "2026-11-03T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-03",
+          "window_start": "2026-11-03T00:00:00Z",
+          "window_end": "2026-11-04T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-04",
+          "window_start": "2026-11-04T00:00:00Z",
+          "window_end": "2026-11-05T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-05",
+          "window_start": "2026-11-05T00:00:00Z",
+          "window_end": "2026-11-06T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-06",
+          "window_start": "2026-11-06T00:00:00Z",
+          "window_end": "2026-11-07T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-07",
+          "window_start": "2026-11-07T00:00:00Z",
+          "window_end": "2026-11-08T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-08",
+          "window_start": "2026-11-08T00:00:00Z",
+          "window_end": "2026-11-09T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-09",
+          "window_start": "2026-11-09T00:00:00Z",
+          "window_end": "2026-11-10T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-10",
+          "window_start": "2026-11-10T00:00:00Z",
+          "window_end": "2026-11-11T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-11",
+          "window_start": "2026-11-11T00:00:00Z",
+          "window_end": "2026-11-12T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-12",
+          "window_start": "2026-11-12T00:00:00Z",
+          "window_end": "2026-11-13T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-13",
+          "window_start": "2026-11-13T00:00:00Z",
+          "window_end": "2026-11-14T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-14",
+          "window_start": "2026-11-14T00:00:00Z",
+          "window_end": "2026-11-15T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        },
+        {
+          "date": "2026-11-15",
+          "window_start": "2026-11-15T00:00:00Z",
+          "window_end": "2026-11-16T00:00:00Z",
+          "bookings_created": 0,
+          "cancelled_bookings": 0,
+          "net_bookings": 0,
+          "booking_value_usd": "0.00"
+        }
+      ]
+    }
+  },
+  "forbidden_error": {
+    "success": false,
+    "error": {
+      "code": "FORBIDDEN",
+      "message": "Your role cannot perform this operation",
+      "details": []
+    },
+    "request_id": "44444444-4444-4444-8444-444444444444"
+  }
+}
