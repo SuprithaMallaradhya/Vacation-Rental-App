@@ -36,6 +36,19 @@
 | 2026-11-15 | Protect Host form amenity references at `/api/v1/host/amenities` | Shares reference IDs now without implementing the Phase 5 public amenities/search APIs early | Implemented in Phase 4 |
 | 2026-11-15 | Paginated lists use top-level pagination and deterministic ordering; money strings and numeric coordinates | Aligns with the V2 envelope and React form/map needs | Implemented in Phase 4 |
 
+## Phase 5 decisions
+
+| Date | Decision | Reason / consequence | Status |
+|---|---|---|---|
+| 2026-11-15 | Create `backend/search-availability` from merged main `51054b2` | Isolates public search from the merged Phase 4 milestone | Implemented |
+| 2026-11-15 | Public search/detail/availability expose only approved listings through explicit public models | Keeps customer, ownership, and moderation records private while publishing Host-managed contact fields | Implemented |
+| 2026-11-15 | Share stay resolution and half-open inventory helpers across public APIs and future booking creation | One 1–14-night/window/capacity/DST policy; Phase 6 must still lock/reload/revalidate inventory and price atomically | Implemented |
+| 2026-11-15 | Reject ambiguous/nonexistent local timestamps; use local date differences for nightly price | Avoids guessed DST offsets and 23/25-hour-day pricing errors; pin tzdata 2026.6 as system-data fallback | Implemented |
+| 2026-11-15 | Default available_only=true with dates, false without; false includes inventory conflicts with indicative quotes | Browse has null quote/availability; capacity/window/DST-invalid stays still cannot be offered | Implemented |
+| 2026-11-15 | All filters use AND; amenities are repeated reference UUIDs; Haversine radius is >0 through 500 km | Gives React a precise filter contract without another external service or paid key | Implemented |
+| 2026-11-15 | Bulk-load related rows/aggregates and apply local eligibility/radius before final pagination | Correct totals and deterministic results for the small demo catalog; production-scale spatial pagination remains future work | Implemented |
+| 2026-11-15 | Ratings require eligible checked-out reviews; bookings_today uses the full current listing-local date and noncancelled reservations | Matches planned display definitions across timezones without customer data | Implemented |
+
 ## Pending external confirmations
 
 - `[PENDING: team name and member names]`

@@ -1,16 +1,16 @@
 # Requirement coverage
 
-Phase 0 records the complete assignment coverage; later phases will replace placeholders with exact source/test links. Phase 1 intentionally covers only foundation requirements.
+Coverage reflects implemented backend Phases 0–5. Later API phases and shared frontend acceptance remain explicitly pending.
 
 | ID | Requirement | Planning evidence | Current implementation/evidence |
 |---|---|---|---|
 | R01 | JSON inputs/outputs, validation, errors | `docs/api-contract.md` | Phase 3 auth request/response models, safe validation errors, preserved authentication/throttle headers, and `backend/tests/auth/` tests |
 | R02 | Customer/Host registration and login | Backlog item AUTH-01 | Phase 3 implemented and tested for Customer/Host/seeded Admin: `backend/app/routers/auth.py`, `services/auth.py`, and `backend/tests/auth/`; React check pending |
-| R03 | Date/time/guest/duration/availability search | Backlog item SEARCH-01 | Phase 2 date/window models and 1/14 versus 0/15-night tests; Phase 4 weekly rules/blocks and future-window protection; search services remain Phases 5–6 |
-| R04 | City/state/ZIP search | Backlog item SEARCH-01 | Phase 5 |
-| R05 | Google address search/map display | External checks | Phase 9; no key required locally |
-| R06 | Media/amenities/cost/reviews/booked-today | Backlog item LIST-01 | Phase 4 Host media/amenities and cost-rating boundaries implemented; public cards/details and ratings/booked-today remain Phases 5–7 |
-| R07 | Booking and overlap prevention | Backlog item BOOK-01 | Phase 2 exclusion constraint; Phase 4 shared listing-row lock, concurrent blocks, queued writer removal test; booking APIs and booking/block races remain Phase 6 |
+| R03 | Date/time/guest/duration/availability search | Backlog item SEARCH-01 | Phase 5 `schemas/search.py`, `services/availability.py`, `services/search.py`, and `tests/search/`: 1–14 nights, duration agreement, windows/capacity, past arrival, DST, inventory, indicative quotes |
+| R04 | City/state/ZIP search | Backlog item SEARCH-01 | Phase 5 filters individually and combined with AND semantics, leading-zero ZIP, empty results and stable pagination tested |
+| R05 | Google address search/map display | External checks | Phase 5 numeric coordinates and bounded Haversine radius implemented/tested; live Google address selection/map UI remains Phase 9; no key required locally |
+| R06 | Media/amenities/cost/reviews/booked-today | Backlog item LIST-01 | Phase 4 management plus Phase 5 public cards/details, media/amenities, cost boundaries, eligible review aggregates/null average, listing-local daily counts; review creation/content APIs remain Phase 7 and UI acceptance pending |
+| R07 | Booking and overlap prevention | Backlog item BOOK-01 | Phase 2 exclusion constraint; Phase 4 listing-first locks; Phase 5 shared stay/inventory validator with half-open/cancelled/block tests; booking transactions and races remain Phase 6 |
 | R08 | Cancellation | Backlog item BOOK-02 | Phase 6 |
 | R09 | Past-stay reviews | Backlog item REVIEW-01 | Phase 7 |
 | R10–R11 | Host add/remove/view/update own listings and nested resources | Backlog item LIST-01 | Phase 4 `routers/host.py`, `schemas/listings.py`, `services/listings.py`, and `tests/listings/`; history and nested ownership verified |

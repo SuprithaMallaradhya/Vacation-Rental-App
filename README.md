@@ -1,6 +1,6 @@
 # Vacation Rental App
 
-The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–4 provide the foundation, database schema, demo data, authentication, Host listing management, and Admin moderation. Public search, booking, review, and analytics APIs remain planned.
+The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–5 provide the foundation, schema/demo data, authentication, Host management, Admin moderation, and public search/details/availability/quotes. Booking, review creation, and analytics APIs remain planned.
 
 ## Prerequisites
 
@@ -39,6 +39,7 @@ open http://127.0.0.1:8000/docs
 make test TEST_PATH=tests/foundation
 make test TEST_PATH=tests/auth
 make test TEST_PATH=tests/listings
+make test TEST_PATH=tests/search
 make test
 make lint
 make schema-check
@@ -80,6 +81,10 @@ After updating, run `make migrate` and `make seed`. Revision `0002_listing_remov
 
 Use the Host/Admin groups in Swagger with the appropriate demo token. Start with `GET /api/v1/host/amenities` for reference IDs. Complete listing details, a photo, and all seven weekdays of hours/rules before approval. Material edits require reapproval; future accepted stays protect their location, capacity, and booking windows. All DELETE endpoints return JSON, and listing removal requires a JSON reason. Read the [listing management contract](docs/listing-management.md) and [form examples](docs/fixtures/listings.json) before connecting React.
 
+## Public search
+
+Public endpoints now include `/api/v1/amenities`, `/api/v1/listings/search`, `/api/v1/listings/{id}`, and `/api/v1/listings/{id}/availability`. Browse without dates returns null quote/availability. Supply check_in plus check_out or duration_nights for 1–14-night quotes. Only approved listings are public; quotes do not reserve inventory. See the [public search contract](docs/public-search.md) for filters, timezone/DST rules, mock fixtures, and frontend integration. Existing checkouts should run `make setup` to install the timezone-data fallback dependency; no new migration is required.
+
 ## Project documents
 
 - [Implementation status](docs/implementation-status.md)
@@ -87,6 +92,7 @@ Use the Host/Admin groups in Swagger with the appropriate demo token. Start with
 - [API contract](docs/api-contract.md)
 - [Authentication and frontend handoff](docs/authentication.md)
 - [Host listings and Admin moderation](docs/listing-management.md)
+- [Public search, availability, and quotes](docs/public-search.md)
 - [Requirement coverage](docs/requirement-coverage.md)
 - [Product backlog](docs/product-backlog.md)
 - [External checks](docs/external-checks.md)
