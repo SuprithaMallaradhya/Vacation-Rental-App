@@ -1,6 +1,6 @@
 # Requirement coverage
 
-Coverage reflects implemented backend Phases 0–5. Later API phases and shared frontend acceptance remain explicitly pending.
+Coverage reflects implemented backend Phases 0–6. Later API phases and shared frontend acceptance remain explicitly pending.
 
 | ID | Requirement | Planning evidence | Current implementation/evidence |
 |---|---|---|---|
@@ -10,14 +10,14 @@ Coverage reflects implemented backend Phases 0–5. Later API phases and shared 
 | R04 | City/state/ZIP search | Backlog item SEARCH-01 | Phase 5 filters individually and combined with AND semantics, leading-zero ZIP, empty results and stable pagination tested |
 | R05 | Google address search/map display | External checks | Phase 5 numeric coordinates and bounded Haversine radius implemented/tested; live Google address selection/map UI remains Phase 9; no key required locally |
 | R06 | Media/amenities/cost/reviews/booked-today | Backlog item LIST-01 | Phase 4 management plus Phase 5 public cards/details, media/amenities, cost boundaries, eligible review aggregates/null average, listing-local daily counts; review creation/content APIs remain Phase 7 and UI acceptance pending |
-| R07 | Booking and overlap prevention | Backlog item BOOK-01 | Phase 2 exclusion constraint; Phase 4 listing-first locks; Phase 5 shared stay/inventory validator with half-open/cancelled/block tests; booking transactions and races remain Phase 6 |
-| R08 | Cancellation | Backlog item BOOK-02 | Phase 6 |
+| R07 | Booking and overlap prevention | Backlog item BOOK-01 | Phase 6 `routers/bookings.py`, `schemas/bookings.py`, `services/bookings.py`, and `tests/bookings/`: listing-first transactions, shared validation, immutable confirmations/history/computed completion; PostgreSQL competing bookings/block/removal/edit/cancellation tests and exclusion-constraint fallback |
+| R08 | Cancellation | Backlog item BOOK-02 | Phase 6 owner-only future cancellation, exact arrival cutoff, idempotent repeats, released nights, rollback, removed-listing history and cancellation/rebooking concurrency tested; React flow pending |
 | R09 | Past-stay reviews | Backlog item REVIEW-01 | Phase 7 |
 | R10–R11 | Host add/remove/view/update own listings and nested resources | Backlog item LIST-01 | Phase 4 `routers/host.py`, `schemas/listings.py`, `services/listings.py`, and `tests/listings/`; history and nested ownership verified |
 | R12 | Host own analytics | Backlog item ANALYTICS-01 | Phase 8 |
 | R13 | Admin approve/reject/remove listings and audit | Backlog item LIST-01 | Phase 4 `routers/admin.py`, approval validation, atomic audit/rollback, removal history, and tests implemented |
 | R14 | Admin analytics | Backlog item ANALYTICS-01 | Phase 8 |
-| R15 | Backend/frontend role access | Backlog item AUTH-01 | Phase 3 auth plus Phase 4 role/ownership matrix for every Host/Admin operation and nested child IDs; React acceptance pending |
+| R15 | Backend/frontend role access | Backlog item AUTH-01 | Phase 3 auth, Phase 4 Host/Admin ownership, Phase 6 Customer-only booking routes, private history and indistinguishable missing/foreign booking errors tested; React acceptance pending |
 | R16 | Azure architecture | `docs/external-checks.md` | No provisioning authorized in Phase 1 |
 | R17 | Database/mock listings | Backlog items DB-01/DB-02 | Phase 2 implemented: `backend/app/models/`, initial Alembic revision, `backend/seed/demo.py`; 28 PostgreSQL tests pass |
 | R18–R21 | Ownership, Scrum evidence, diagrams, final README | `docs/product-backlog.md` and placeholders | Ongoing; no fabricated evidence |

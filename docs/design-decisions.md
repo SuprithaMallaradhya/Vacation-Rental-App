@@ -49,6 +49,20 @@
 | 2026-11-15 | Bulk-load related rows/aggregates and apply local eligibility/radius before final pagination | Correct totals and deterministic results for the small demo catalog; production-scale spatial pagination remains future work | Implemented |
 | 2026-11-15 | Ratings require eligible checked-out reviews; bookings_today uses the full current listing-local date and noncancelled reservations | Matches planned display definitions across timezones without customer data | Implemented |
 
+## Phase 6 decisions
+
+| Date | Decision | Reason / consequence | Status |
+|---|---|---|---|
+| 2026-11-15 | Create `backend/bookings-cancellation` from merged main `21ed13a` | Isolates booking work from the merged Phase 5 milestone | Implemented |
+| 2026-11-15 | Reuse the existing bookings schema, stay validator, inventory queries, and listing lock | Avoids duplicate business rules and unnecessary migration/dependency changes | Implemented |
+| 2026-11-15 | Customer identity comes from auth; creation rejects client price/currency/state/snapshots | Server calculates the current price and persists accepted confirmation fields atomically | Implemented |
+| 2026-11-15 | Cancellation reads an owned parent ID, then locks listing before booking | Same cross-process writer ordering as blocks/moderation; foreign IDs return 404 before acquiring their parent's inventory lock | Implemented |
+| 2026-11-15 | Inject a clock callable and read it after waiting/validation queries | Creation/cancellation cannot use a stale request-start timestamp after waiting for a lock | Implemented |
+| 2026-11-15 | Explicit cancellation UPDATE RETURNING writes all state/audit fields together | Preserves chosen UTC operation time even when a frozen clock equals created_at; avoids implicit async ORM refresh during serialization | Implemented |
+| 2026-11-15 | Persist CONFIRMED/CANCELLED; derive COMPLETED and can_cancel from accepted UTC snapshots | Correct checkout/arrival boundaries without a scheduler; repeat cancellation preserves its original timestamp | Implemented |
+| 2026-11-15 | Confirmation/history render saved fields without requiring current public listing detail | Keeps accepted price/name/location/time readable after changes or terminal removal; existing seed snapshots stay intact | Implemented |
+| 2026-11-15 | Observe pg_blocking_pids in separate-connection concurrency tests | Proves actual database serialization and both writer orders; no process-local mutex or timing-only assertion | Implemented |
+
 ## Pending external confirmations
 
 - `[PENDING: team name and member names]`

@@ -1,6 +1,6 @@
 # Public search, details, availability, and quotes
 
-Phase 5 exposes approved rentals publicly and supplies a shared nightly/date/time validator for Phase 6. These endpoints require no bearer token. They do not create reservations, acquire inventory locks, call Google, or make a quote a guaranteed booking.
+Phase 5 exposes approved rentals publicly and supplies the nightly/date/time validator reused by [Phase 6 bookings](bookings.md). These public endpoints require no bearer token. They do not create reservations, acquire inventory locks, call Google, or make a quote a guaranteed booking.
 
 ## Setup and quick checks
 
@@ -76,7 +76,7 @@ Malformed global parameters, inconsistent duration/dates, missing coordinate par
 
 The shared validator roundtrips both folds through UTC. Ambiguous/nonexistent local timestamps are rejected instead of guessing a DST offset. In a multi-timezone search, only the affected listing is excluded; other matching timezones may remain. For a single listing's detail/availability, invalid local windows/capacity/past arrival/DST produce explicit 422 errors such as GUEST_LIMIT, OUTSIDE_BOOKING_WINDOW, ARRIVAL_IN_PAST, AMBIGUOUS_LOCAL_TIME, or NONEXISTENT_LOCAL_TIME, with field details.
 
-Search and detail/availability use the same accepted stay data and inventory overlap helper. Phase 6 must re-read/validate under the existing listing-row lock and recheck inventory and price in the booking transaction. The current read-only quote is not that transaction.
+Search and detail/availability use the same accepted stay data and inventory overlap helper. Phase 6 booking creation re-reads/validates under the existing listing-row lock and rechecks inventory and price in its transaction. The read-only quote remains an estimate.
 
 ## Public fields and privacy
 

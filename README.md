@@ -1,6 +1,6 @@
 # Vacation Rental App
 
-The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–5 provide the foundation, schema/demo data, authentication, Host management, Admin moderation, and public search/details/availability/quotes. Booking, review creation, and analytics APIs remain planned.
+The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–6 provide the foundation, schema/demo data, authentication, Host management, Admin moderation, public search/details/availability/quotes, and Customer bookings/history/cancellation. Review creation and analytics APIs remain planned.
 
 ## Prerequisites
 
@@ -40,6 +40,7 @@ make test TEST_PATH=tests/foundation
 make test TEST_PATH=tests/auth
 make test TEST_PATH=tests/listings
 make test TEST_PATH=tests/search
+make test TEST_PATH=tests/bookings
 make test
 make lint
 make schema-check
@@ -85,6 +86,10 @@ Use the Host/Admin groups in Swagger with the appropriate demo token. Start with
 
 Public endpoints now include `/api/v1/amenities`, `/api/v1/listings/search`, `/api/v1/listings/{id}`, and `/api/v1/listings/{id}/availability`. Browse without dates returns null quote/availability. Supply check_in plus check_out or duration_nights for 1–14-night quotes. Only approved listings are public; quotes do not reserve inventory. See the [public search contract](docs/public-search.md) for filters, timezone/DST rules, mock fixtures, and frontend integration. Existing checkouts should run `make setup` to install the timezone-data fallback dependency; no new migration is required.
 
+## Customer bookings
+
+Log in as a Customer and use the **customer bookings** Swagger group. POST `/api/v1/bookings` accepts a listing ID and the selected stay, calculates the current total on the server, and reserves available nights in a transaction. GET `/api/v1/bookings/my` lists your saved history; GET `/api/v1/bookings/{id}` shows your confirmation. PATCH `/api/v1/bookings/{id}/cancel` takes no body and cancels your future stay before arrival. Repeated cancellation preserves the original result. Details/prices survive listing edits/removal; completion is computed after checkout. See the [walkthrough and contract](docs/bookings.md) and [JSON examples](docs/fixtures/bookings.json). Phase 6 requires no new migration or dependency.
+
 ## Project documents
 
 - [Implementation status](docs/implementation-status.md)
@@ -93,6 +98,7 @@ Public endpoints now include `/api/v1/amenities`, `/api/v1/listings/search`, `/a
 - [Authentication and frontend handoff](docs/authentication.md)
 - [Host listings and Admin moderation](docs/listing-management.md)
 - [Public search, availability, and quotes](docs/public-search.md)
+- [Customer bookings, history, and cancellation](docs/bookings.md)
 - [Requirement coverage](docs/requirement-coverage.md)
 - [Product backlog](docs/product-backlog.md)
 - [External checks](docs/external-checks.md)
