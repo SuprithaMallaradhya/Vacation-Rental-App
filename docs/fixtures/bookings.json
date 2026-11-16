@@ -1,0 +1,52 @@
+{
+  "note": "Illustrative frontend fixtures, not live IDs or booking confirmations. Use a current search result ID and user-selected dates for real requests.",
+  "create_request": {
+    "listing_id": "11111111-1111-4111-8111-111111111111",
+    "check_in": "2030-01-10",
+    "duration_nights": 2,
+    "guests": 2
+  },
+  "create_success": {
+    "success": true,
+    "data": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "listing_id": "11111111-1111-4111-8111-111111111111",
+      "check_in": "2030-01-10", "check_out": "2030-01-12", "nights": 2, "guests": 2,
+      "check_in_time": "15:00", "check_out_time": "11:00",
+      "arrival_at": "2030-01-10T23:00:00Z", "departure_at": "2030-01-12T19:00:00Z",
+      "nightly_price_snapshot": "150.00", "total_cost": "300.00", "currency": "USD",
+      "listing_name_snapshot": "Sunny San Jose Home",
+      "listing_address_snapshot": "100 Example Lane, San Jose, CA, 95112",
+      "listing_zip_snapshot": "95112", "listing_timezone_snapshot": "America/Los_Angeles",
+      "reservation_state": "CONFIRMED", "status": "CONFIRMED", "can_cancel": true,
+      "cancelled_at": null, "created_at": "2026-11-15T20:00:00Z", "updated_at": "2026-11-15T20:00:00Z"
+    }
+  },
+  "cancel_success": {
+    "success": true,
+    "data": {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "listing_id": "11111111-1111-4111-8111-111111111111",
+      "check_in": "2030-01-10", "check_out": "2030-01-12", "nights": 2, "guests": 2,
+      "check_in_time": "15:00", "check_out_time": "11:00",
+      "arrival_at": "2030-01-10T23:00:00Z", "departure_at": "2030-01-12T19:00:00Z",
+      "nightly_price_snapshot": "150.00", "total_cost": "300.00", "currency": "USD",
+      "listing_name_snapshot": "Sunny San Jose Home",
+      "listing_address_snapshot": "100 Example Lane, San Jose, CA, 95112",
+      "listing_zip_snapshot": "95112", "listing_timezone_snapshot": "America/Los_Angeles",
+      "reservation_state": "CANCELLED", "status": "CANCELLED", "can_cancel": false,
+      "cancelled_at": "2026-11-15T21:00:00Z", "created_at": "2026-11-15T20:00:00Z", "updated_at": "2026-11-15T21:00:00Z"
+    }
+  },
+  "empty_history": {"success": true, "data": [], "pagination": {"page": 1, "page_size": 10, "total_items": 0, "total_pages": 0}},
+  "inventory_conflict": {
+    "success": false,
+    "error": {"code": "DATES_UNAVAILABLE", "message": "Requested nights are not available", "details": []},
+    "request_id": "44444444-4444-4444-8444-444444444444"
+  },
+  "cancellation_closed": {
+    "success": false,
+    "error": {"code": "CANCELLATION_CLOSED", "message": "Cancellation closes at arrival", "details": []},
+    "request_id": "44444444-4444-4444-8444-444444444444"
+  }
+}

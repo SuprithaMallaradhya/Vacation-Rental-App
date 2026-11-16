@@ -237,6 +237,50 @@ The [public API guide](public-search.md) and [mock fixtures](fixtures/search.jso
 
 Phase 5 was initially handed off unstaged, uncommitted, and unpushed. The user subsequently authorized committing and pushing this phase on `backend/search-availability`. Checkpoint message: `feat: add public listing search, availability, and quotes`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 6 — implemented and locally verified
+
+Branch: `backend/bookings-cancellation`, created without upstream tracking from merged `origin/main` at `21ed13a` (Phase 5 merge). Confirmed `f856ae1` is an ancestor of main; the working tree was clean before implementation. The implementation was initially handed off without a commit or push.
+
+Implemented Customer POST booking creation, GET owned history, GET saved confirmation, and PATCH cancellation. Creation reuses the Phase 5 stay/inventory validator after acquiring the existing listing lock, rechecks approval/windows/capacity/price and current time, calculates Decimal totals on the server, and atomically persists accepted price/name/address/ZIP/timezone/UTC snapshots. Customer identity comes from auth; price/state/owner injection is rejected. Booking history retains removed-listing confirmations and uses deterministic bounded pagination, including safe empty responses for very large out-of-range page numbers.
+
+Cancellation locks listing before booking, verifies ownership, allows cancellation strictly before accepted arrival, preserves repeated cancellation state/timestamps, and releases nightly inventory. Removed listings can still have their valid future owned booking cancelled. Failures roll back; the named PostgreSQL exclusion violation becomes a safe 409. CONFIRMED/CANCELLED remain persisted states; COMPLETED and can_cancel are computed from accepted UTC timestamps without a scheduler. A clock callable is read after waiting for a lock so arrival/cancellation checks do not use stale request-start time.
+
+### Files changed
+
+- Added `backend/app/routers/bookings.py`, `schemas/bookings.py`, and `services/bookings.py`; updated `core/clock.py` and app router wiring.
+- Added `backend/tests/bookings/`: isolated API/clock fixtures, helpers, lifecycle/authorization/validation, transaction rollback, and real concurrency tests (72 cases total; 15 concurrency cases).
+- Added `docs/bookings.md` and `docs/fixtures/bookings.json`; updated README, API contract, public search guide, decisions, coverage, and this status report.
+- No model, migration, dependency, CI configuration, or environment change was needed. Existing CI discovers all new tests; current Alembic head remains `0002_listing_removal_audit`.
+
+### Actual commands and results
+
+| Command/check | Result |
+|---|---|
+| `git fetch origin`; `git merge-base --is-ancestor f856ae1 origin/main`; `git switch --no-track -c backend/bookings-cancellation origin/main` | Passed; merged Phase 5 confirmed at main `21ed13a`, fresh branch created |
+| Initial `make test TEST_PATH=tests/bookings` | 52 passed, 2 failed (54 initial tests): equal frozen create/cancel timestamps let ORM onupdate expire updated_at, triggering implicit async loading during confirmation serialization |
+| Cancellation fix and expanded booking gate | Replaced cancellation write with explicit UPDATE RETURNING; all 68 then-current cases passed, including real lock-wait races |
+| `make test TEST_PATH=tests/bookings` after added rollback/window cases | Passed: all 72 booking tests |
+| `make verify` | Passed: Ruff, all 316 backend tests on Python 3.12.16, and Alembic drift check with no new upgrade operations; one existing Starlette/AnyIO deprecation warning |
+| Final `make verify` after very-large-page regression fix | Passed again: all 316 tests, Ruff, and no migration drift; one existing deprecation warning |
+| `backend/.venv/bin/ruff format --check backend`; `git diff --check` | Passed: 74 Python files formatted, no whitespace errors |
+| `make openapi` | Passed; all four booking operations exported with BearerAuth, request/response/error schemas and request example; export remains ignored |
+| Booking fixture and Swagger example validation against Pydantic models | Passed: create, confirmation, cancellation, empty history, error fixtures; accepted snapshots unchanged by cancellation |
+| Final project-file review | All 20 changed/new files checked; local Markdown links and JSON parsed, common secret-signature scan had no matches. Frontend/private ignored files excluded; Git index remains empty |
+| Temporary `backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed startup and shutdown after smoke checks |
+| Live urllib checks | Health/readiness/Swagger/ReDoc/OpenAPI, Customer login and owned history/detail: 200. Missing auth: JSON 401; malformed booking UUID: JSON 422; request IDs/money strings/history consistency verified. No development booking writes performed |
+| `docker compose ps`; read-only development identity/count SQL | Both databases healthy. `vacation_rental_dev`, revision `0002_listing_removal_audit`, 7 users, 12 listings, 18 bookings, 7 reviews, 1 removal; existing development data preserved |
+| Final read-only test identity/catalog SQL | `vacation_rental_test`, 0 public tables, 0 leftover temporary test schemas |
+
+Concurrency tests use independent sessions/connections and observe PostgreSQL `pg_blocking_pids`, rather than assuming a delay means contention. They prove one 201/one 409 for the same free nights; both orders for booking versus block, Host/Admin removal, and cancellation/rebooking; committed price/approval/window rechecks; identical simultaneous cancellations; and arrival/cancellation cutoff rechecks after waiting. Commit-failure tests prove full rollback without partially accepted reservations or cancellation state.
+
+Two test-only lint findings (assigned lambdas) were fixed. The initial cancellation failures are retained above as actual results; all final gates pass. Manual React search → book → history → cancel and browser acceptance remain unexecuted pending teammate integration. GitHub CI has not run for this unpushed phase. Earlier plans' external placeholders (course timezone/Demo Day, team/board/instructor links, shared API review) remain pending and do not block local backend work.
+
+### Handoff and checkpoint
+
+The [booking walkthrough and contract](bookings.md) and [frontend JSON examples](fixtures/bookings.json) are ready for teammate review. Price/inventory can change after a search quote; the accepted server confirmation is authoritative. Existing seed snapshot text is retained as stored, without invented historical backfill. No frontend files, cloud resources, paid services, or unrelated user data were changed. New writes were verified against disposable schemas in the separate test database; the live development smoke check only logged in and read bookings.
+
+The user subsequently authorized committing and pushing Phase 6 on `backend/bookings-cancellation`. Checkpoint message: `feat: add atomic Customer bookings, history, and cancellation`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 6 will implement Customer booking creation/detail/history, computed completion, immutable price/time/location snapshots, and owner-only cancellation. Booking writes will reuse shared stay/inventory validation inside listing-first transactions, with real concurrent booking/block/removal race tests. Phase 6 has not started.
+Phase 7 will implement Customer review creation and paginated public listing reviews. It will enforce ownership, a noncancelled checked-out stay, one review per booking (including concurrent duplicate requests), and 1–5 ratings, reusing the existing public rating aggregates. Phase 7 has not started.
