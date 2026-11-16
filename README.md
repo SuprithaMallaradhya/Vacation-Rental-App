@@ -1,6 +1,6 @@
 # Vacation Rental App
 
-The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–7 provide the foundation, schema/demo data, authentication, Host management, Admin moderation, public search/details/availability/quotes, Customer bookings/history/cancellation, and reviews/ratings. Analytics APIs remain planned.
+The backend is in `backend/`. The React frontend is owned by the teammate. Phases 0–8 provide the foundation, schema/demo data, authentication, Host management, Admin moderation, public search/details/availability/quotes, Customer bookings/history/cancellation, reviews/ratings, and Host/Admin analytics. Shared React/Google Maps integration and production/deployment work remain planned.
 
 ## Prerequisites
 
@@ -42,6 +42,7 @@ make test TEST_PATH=tests/listings
 make test TEST_PATH=tests/search
 make test TEST_PATH=tests/bookings
 make test TEST_PATH=tests/reviews
+make test TEST_PATH=tests/analytics
 make test
 make lint
 make schema-check
@@ -95,6 +96,10 @@ Log in as a Customer and use the **customer bookings** Swagger group. POST `/api
 
 Customers can POST `/api/v1/reviews` with an owned noncancelled checked-out booking ID, integer rating 1–5, and a comment. Each booking can be reviewed once. GET `/api/v1/listings/{id}/reviews` publicly lists eligible reviews for an approved listing; search/detail rating aggregates update from the same eligibility rules. The original seed's eligible completed stays already have reviews, so duplicate rejection is expected for those IDs. See the [review walkthrough](docs/reviews.md), [JSON examples](docs/fixtures/reviews.json), and [phase audit](docs/phase-acceptance.md). No new migration or dependency is required.
 
+## Host and Admin analytics
+
+Use GET `/api/v1/host/analytics` with a Host token or GET `/api/v1/admin/analytics` with an Admin token. Both accept period_days=30/60/90 (default 30) and optional zip_code, and return current inventory/status counts, new listings, booking/cancellation/net counts, saved booking value, ZIP breakdowns, and UTC daily buckets. Host scope comes from auth. Booking value uses saved noncancelled totals and is not paid revenue. ZIPs use current listings versus saved booking ZIPs. See the [analytics walkthrough and metric/chart definitions](docs/analytics.md) and [JSON examples](docs/fixtures/analytics.json). No new migration or dependency is required.
+
 ## Project documents
 
 - [Implementation status](docs/implementation-status.md)
@@ -105,6 +110,7 @@ Customers can POST `/api/v1/reviews` with an owned noncancelled checked-out book
 - [Public search, availability, and quotes](docs/public-search.md)
 - [Customer bookings, history, and cancellation](docs/bookings.md)
 - [Reviews and ratings](docs/reviews.md)
+- [Host and Admin analytics](docs/analytics.md)
 - [Backend phase acceptance audit](docs/phase-acceptance.md)
 - [Requirement coverage](docs/requirement-coverage.md)
 - [Product backlog](docs/product-backlog.md)

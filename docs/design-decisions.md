@@ -77,6 +77,18 @@
 | 2026-11-15 | Make the old raw exclusion test order its uncommitted inserts and observe a real PostgreSQL wait | Full regression found a raw GiST insert deadlock in the test. API booking concurrency remains independently tested under listing locks; no retries/skips or weakened constraints | Implemented |
 | 2026-11-15 | Retain original already-reviewed demo stays; prepare unreviewed stays only in disposable tests | Verifies successful creation without rewriting accepted development history; shared manual demo data preparation remains pending | Implemented |
 
+## Phase 8 decisions
+
+| Date | Decision | Reason / consequence | Status |
+|---|---|---|---|
+| 2026-11-15 | Create `backend/host-admin-analytics` from merged main `89fdea6` | Keeps analytics separate from merged Phase 7 | Implemented |
+| 2026-11-15 | Server captures a UTC reporting end; only period_days and zip_code are accepted | Exact rolling [end − days, end) semantics; Host identity derives from auth and cannot be overridden | Implemented |
+| 2026-11-15 | Inventory uses current ZIP/status, booking metrics use saved ZIP/price and creation time | Retains removed/moved listing history and original totals; cancelled subset uses current state, not cancellation-event time | Implemented |
+| 2026-11-15 | Group both populations in one PostgreSQL UNION ALL statement; reduce its grouped rows into totals/charts | One statement snapshot and one booking population keep root/day/ZIP counts and Decimal totals reconciled during writes; no N+1 or review/media joins | Implemented |
+| 2026-11-15 | UTC-calendar daily buckets are clipped to exact rolling bounds | Zero-filled charts normally have days+1 rows when end is not midnight; preserves both partial edge dates instead of changing the defined reporting window | Implemented |
+| 2026-11-15 | Return all four status counts, sorted populated ZIP groups, and explicit zero money strings | Stable empty-state and chart contracts; aggregate Decimal money is not constrained to one booking's range | Implemented |
+| 2026-11-15 | Label sum of noncancelled snapshots booking_value_usd | Reports reservation value without implying payment collection or revenue | Implemented |
+
 ## Pending external confirmations
 
 - `[PENDING: team name and member names]`
