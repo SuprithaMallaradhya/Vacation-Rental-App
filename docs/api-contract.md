@@ -37,13 +37,22 @@ All success payloads are inside `data`. User fields are id/name/email/phone/role
 
 See the [authentication handoff](authentication.md) for password byte limits, token lifetime/settings, role helpers, error examples, Swagger steps, and throttle limitations, plus [JSON mock fixtures](fixtures/auth.json) for React development. Contract review and live React acceptance are still pending.
 
-## Frontend handoff
+## Implemented Phase 5 public endpoints
 
-Phase 4 also implements the Host listing/media/hours/booking-rule/block routes and Admin listing/approval/rejection/removal/audit routes in the [management contract](listing-management.md). Host form reference amenities are at `GET /api/v1/host/amenities`; the public amenities/search endpoints remain Phase 5. See [form JSON](fixtures/listings.json) for requests. Paginated lists use `success`, array `data`, and top-level `pagination`. Listing removal and rejection require JSON reasons; listing/child DELETE returns JSON 200.
+- GET `/api/v1/amenities`: public reference UUID/name list.
+- GET `/api/v1/listings/search`: approved-only cards with all planned filters, deterministic bounded pagination, local availability, and indicative quotes.
+- GET `/api/v1/listings/{id}`: approved detail and optional stay quote.
+- GET `/api/v1/listings/{id}/availability`: required stay query and quote/availability.
+
+See [public search contract](public-search.md) for exact fields/filter semantics, date/time/DST validation, shared availability behavior, and [React mock fixtures](fixtures/search.json). Public responses exclude customer/management data. Without dates, available/total_cost/quote are null. With a valid stay, available_only defaults true; false includes valid but inventory-blocked quotes with available=false. Capacity/window/DST-invalid listings are excluded from search; singular invalid stay requests return 422. Quotes remain estimates until a future booking transaction revalidates them.
+
+## Frontend handoff status
+
+Phase 4 also implements the Host listing/media/hours/booking-rule/block routes and Admin listing/approval/rejection/removal/audit routes in the [management contract](listing-management.md). Host form reference amenities are at `GET /api/v1/host/amenities`; Phase 5 now also exposes public amenities and search. See [form JSON](fixtures/listings.json) for requests. Paginated lists use `success`, array `data`, and top-level `pagination`. Listing removal and rejection require JSON reasons; listing/child DELETE returns JSON 200.
 
 Material listing/photo changes reset APPROVED to PENDING; valid nonmaterial changes preserve approval. Future/ongoing stays prevent incompatible location/timezone/capacity/window changes. New removals record actor/reason/time and retain reservations/reviews. All nested ownership is enforced server-side. UI acceptance remains pending.
 
-Phase 3 is ready for the initial auth handoff. The future price field is `nightly_price`, money will serialize as decimal strings, ZIP codes remain strings, and dates use `check_in`/`check_out`. Booking state is persisted as `reservation_state=CONFIRMED|CANCELLED`; completion will be computed by the booking API. See [database conventions](database.md) for snapshot fields and the ERD. These are implementation choices for teammate review; they do not claim a completed frontend agreement.
+Authentication, management, and public search are ready for teammate contract review. The price field is `nightly_price`, money serializes as decimal strings, ZIP codes remain strings, and dates use `check_in`/`check_out`. Booking state is persisted as `reservation_state=CONFIRMED|CANCELLED`; completion will be computed by the booking API. See [database conventions](database.md) for snapshot fields and the ERD. These are implementation choices for teammate review; they do not claim a completed frontend agreement.
 
 - `[PENDING: teammate contract review]`
 - `[PENDING: reachable shared API base URL; localhost alone is not a cross-machine handoff]`

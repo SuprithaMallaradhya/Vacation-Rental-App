@@ -19,6 +19,7 @@ from app.routers.admin import router as admin_router
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
 from app.routers.host import router as host_router
+from app.routers.listings import router as listings_router
 
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(host_router, prefix="/api/v1")
     application.include_router(admin_router, prefix="/api/v1")
+    application.include_router(listings_router, prefix="/api/v1")
     return application
 
 

@@ -194,6 +194,49 @@ The first management-only run passed 18 tests; the additional validation/rollbac
 - Course timezone/Demo Day, team/board/instructor links, and actual teammate contract approval remain pending.
 - Phase 4 checkpoint commit: `feat: add Host listing management and Admin moderation`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 5 — implemented and locally verified
+
+Branch: `backend/search-availability`, created without upstream tracking from merged `origin/main` at `51054b2` (Phase 4 merge). The working tree was clean before implementation.
+
+Implemented four public GET endpoints: amenities, approved listing search, approved detail, and single-listing availability. Search combines dates/duration/local times, guests, city/state/text ZIP, coordinates/radius, amenity UUIDs, price bounds, availability, sort, and bounded pagination with AND semantics. Cards/detail include media, amenities, coordinates, cost rating, eligible review aggregates, listing-local bookings_today, and indicative quotes; detail adds contact fields/hours and booking windows. Pending/rejected/removed records and private management/customer data remain hidden.
+
+Added shared stay resolution and half-open inventory helpers for 1–14 local nights, strictly future arrival, weekday windows/defaults, capacity, DST ambiguity/gaps, Decimal totals, confirmed reservations, and date blocks. Browsing returns null quote/availability. Dated search defaults available_only=true; false includes inventory conflicts with available=false and an indicative quote, while invalid local stays are still excluded. Quotes reserve nothing; Phase 6 must revalidate under the listing lock.
+
+### Files changed
+
+- Added `backend/app/core/clock.py`, `routers/listings.py`, `schemas/search.py`, `services/availability.py`, and `services/search.py`; updated router wiring in `app/main.py`.
+- Added `backend/tests/search/` fixtures and 72 validation, API, display, privacy, timezone, inventory, filter, pagination, and OpenAPI tests.
+- Updated `backend/pyproject.toml` with pinned `tzdata==2026.6` as the fallback for systems without IANA timezone data. No schema/model/migration change; head remains `0002_listing_removal_audit`.
+- Added `docs/public-search.md` and `docs/fixtures/search.json`; updated README, API contract, decisions, requirement coverage, and this status document.
+
+### Actual commands and results
+
+| Command/check | Result |
+|---|---|
+| `git fetch origin main`; `git switch --no-track -c backend/search-availability origin/main` | Passed; verified Phase 4 merge `51054b2` before branch creation |
+| `backend/.venv/bin/python -m pip install -e 'backend[dev]'` | Passed; installed the pinned timezone-data dependency in the existing Python 3.12 environment |
+| `make test TEST_PATH=tests/search/test_validation.py` | Initial 44-case unit run passed; added boundary case is included in the final 72-test suite |
+| `make test TEST_PATH=tests/search/test_search.py` | Passed: 22 real-PostgreSQL API/filter/privacy/OpenAPI tests |
+| `make test TEST_PATH=tests/search/test_display.py` | Passed: 5 rating/cost/timezone/pagination/radius tests |
+| `make test TEST_PATH=tests/search` | Passed: all 72 Phase 5 tests |
+| `make verify` | Passed: Ruff, all 244 backend tests on Python 3.12.16, and Alembic drift check (no new upgrade operations). One existing Starlette/AnyIO deprecation warning |
+| `make openapi` | Passed; four public operations exported without an auth requirement; generated export remains ignored |
+| Search JSON request/response/error examples validated against Pydantic models | Passed |
+| Temporary `backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed startup and shutdown after read-only HTTP checks |
+| Live urllib GET checks | Health/readiness/OpenAPI/amenities/search/detail/availability: 200. Browse nulls, matching quotes, numeric coordinates, decimal money, 14-night stay and combined city/state/ZIP/radius filters passed. 15-night stay and availability-only browse: standard JSON 422 with matching request IDs |
+| Read-only development identity/count SQL | `vacation_rental_dev`, revision `0002_listing_removal_audit`, 7 users, 12 listings, 18 bookings, 7 reviews, 1 removal; existing demo data preserved |
+| Read-only test catalog SQL | `vacation_rental_test`, 0 public tables, 0 leftover temporary test schemas |
+| `backend/.venv/bin/ruff format --check backend`; final `make lint`; `git diff --check` | Passed: 64 Python files formatted, no lint or whitespace findings |
+| Final review of all 20 changed/new files | Local Markdown links and JSON parsed; common secret-signature scan found no matches. No frontend/ignored private files included; Git index remains empty |
+
+An early command mistakenly passed pytest's `-x` flag to make, which rejected the invocation before running tests. It was corrected; all final automated gates passed. No failed or blocked automated check remains. Live React login → search → detail and manual browser acceptance remain unexecuted pending teammate integration. GitHub CI has not run for these unpushed changes.
+
+### Review and handoff
+
+The [public API guide](public-search.md) and [mock fixtures](fixtures/search.json) are ready for teammate review. Search uses coarse SQL filtering and bulk reads followed by local eligibility/radius/pagination for the small demo catalog; production-scale spatial pagination is outside this phase. No Google key, frontend change, Azure provisioning, paid service, or development data mutation was needed. Course timezone/Demo Day, team links, and shared API acceptance remain pending external confirmations.
+
+Phase 5 was initially handed off unstaged, uncommitted, and unpushed. The user subsequently authorized committing and pushing this phase on `backend/search-availability`. Checkpoint message: `feat: add public listing search, availability, and quotes`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 5 will implement public approved-listing search, details, amenities, availability, and server quotes, including nightly date/time validation, guest/city/state/ZIP/radius filters, pagination, and shared availability logic for Phase 6 bookings. It has not started.
+Phase 6 will implement Customer booking creation/detail/history, computed completion, immutable price/time/location snapshots, and owner-only cancellation. Booking writes will reuse shared stay/inventory validation inside listing-first transactions, with real concurrent booking/block/removal race tests. Phase 6 has not started.
