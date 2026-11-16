@@ -57,13 +57,19 @@ See [public search contract](public-search.md) for exact fields/filter semantics
 
 All four require a Customer token. Missing auth is 401, wrong role 403, foreign/missing bookings 404, occupied/unapproved booking attempts or cancellation after arrival 409, invalid stay/body fields 422. Shared nightly validation and PostgreSQL listing-first transactions protect inventory. Price, time, name/address/ZIP/timezone snapshots are retained; persisted reservation_state stays CONFIRMED/CANCELLED while response status derives COMPLETED at checkout. See [booking contract](bookings.md) and [mock JSON](fixtures/bookings.json) for exact fields, errors, concurrency behavior, and React walkthrough.
 
+## Implemented Phase 7 reviews
+
+POST `/api/v1/reviews` requires a Customer token and JSON booking_id, strict integer rating (1–5), and trimmed comment (1–2000 characters). An owned noncancelled checked-out stay can be reviewed once: success 201, duplicate/ineligible stay 409, missing/foreign booking 404, bad input 422. Identity/time are server-derived; reservation and listing state are preserved.
+
+GET `/api/v1/listings/{listing_id}/reviews` is public for APPROVED listings and returns safe review id/rating/comment/created_at with top-level pagination, newest first and UUID ties. Other listing states/missing IDs return 404. Pages and search/detail aggregates share the eligible checked-out review filter. See [review contract](reviews.md) and [JSON examples](fixtures/reviews.json), including the original seed's already-reviewed stays and automated 201 workflow.
+
 ## Frontend handoff status
 
 Phase 4 also implements the Host listing/media/hours/booking-rule/block routes and Admin listing/approval/rejection/removal/audit routes in the [management contract](listing-management.md). Host form reference amenities are at `GET /api/v1/host/amenities`; Phase 5 now also exposes public amenities and search. See [form JSON](fixtures/listings.json) for requests. Paginated lists use `success`, array `data`, and top-level `pagination`. Listing removal and rejection require JSON reasons; listing/child DELETE returns JSON 200.
 
 Material listing/photo changes reset APPROVED to PENDING; valid nonmaterial changes preserve approval. Future/ongoing stays prevent incompatible location/timezone/capacity/window changes. New removals record actor/reason/time and retain reservations/reviews. All nested ownership is enforced server-side. UI acceptance remains pending.
 
-Authentication, management, public search, and Customer bookings are ready for teammate contract review. The listing price field is `nightly_price`; confirmations use `nightly_price_snapshot`. Money serializes as decimal strings, ZIP codes remain strings, and dates use `check_in`/`check_out`. Booking state is persisted as `reservation_state=CONFIRMED|CANCELLED`; completion is computed by the booking API. See [database conventions](database.md) for snapshot fields and the ERD. These are implementation choices for teammate review; they do not claim a completed frontend agreement.
+Authentication, management, public search, Customer bookings, and reviews are ready for teammate contract review. The listing price field is `nightly_price`; confirmations use `nightly_price_snapshot`. Money serializes as decimal strings, ZIP codes remain strings, and dates use `check_in`/`check_out`. Booking state is persisted as `reservation_state=CONFIRMED|CANCELLED`; completion is computed by the booking API. See [database conventions](database.md) for snapshot fields and the ERD. These are implementation choices for teammate review; they do not claim a completed frontend agreement.
 
 - `[PENDING: teammate contract review]`
 - `[PENDING: reachable shared API base URL; localhost alone is not a cross-machine handoff]`

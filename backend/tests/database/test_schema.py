@@ -172,25 +172,63 @@ async def test_exclusion_constraint_with_two_real_transactions(db, database_engi
         departure_at=original.departure_at + timedelta(days=400),
     )
     await db.rollback()
-    start = asyncio.Event()
+    waiter_pids = []
 
     async def attempt():
         async with AsyncSession(engine) as session:
-            await start.wait()
             try:
                 async with session.begin():
+                    waiter_pids.append(await session.scalar(text("SELECT pg_backend_pid()")))
                     session.add(Booking(**{**values, "id": uuid4()}))
                 return "inserted"
             except IntegrityError as exc:
                 assert "ex_bookings_no_confirmed_overlap" in str(exc)
                 return "conflict"
 
-    attempts = [asyncio.create_task(attempt()), asyncio.create_task(attempt())]
-    start.set()
-    assert sorted(await asyncio.wait_for(asyncio.gather(*attempts), timeout=15)) == [
-        "conflict",
-        "inserted",
-    ]
+    # Two unsynchronized raw GiST inserts can deadlock while discovering each
+    # other. Keep one inserted row uncommitted, observe the other transaction's
+    # real constraint wait, then commit. No application row lock is used here;
+    # Phase 6 separately tests truly simultaneous API writes with listing locks.
+    async with AsyncSession(engine) as first:
+        first.add(Booking(**{**values, "id": uuid4()}))
+        await first.flush()
+        first_pid = await first.scalar(text("SELECT pg_backend_pid()"))
+        task = asyncio.create_task(attempt())
+
+        async def observe_constraint_wait():
+            async with AsyncSession(engine) as observer:
+                while True:
+                    if waiter_pids and await observer.scalar(
+                        text("SELECT :holder = ANY(pg_blocking_pids(:waiter))"),
+                        {"holder": first_pid, "waiter": waiter_pids[0]},
+                    ):
+                        return
+                    await asyncio.sleep(0.01)
+
+        try:
+            await asyncio.wait_for(observe_constraint_wait(), timeout=8)
+            assert waiter_pids[0] != first_pid and not task.done()
+            await first.commit()
+            assert await asyncio.wait_for(task, timeout=8) == "conflict"
+        finally:
+            await first.rollback()
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+    assert (
+        len(
+            (
+                await db.scalars(
+                    select(Booking.id).where(
+                        Booking.listing_id == values["listing_id"],
+                        Booking.check_in == values["check_in"],
+                        Booking.reservation_state == ReservationState.CONFIRMED,
+                    )
+                )
+            ).all()
+        )
+        == 1
+    )
 
 
 async def test_seed_is_idempotent_preserves_edits_and_covers_fixtures(db):
