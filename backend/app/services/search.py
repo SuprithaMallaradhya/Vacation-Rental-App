@@ -36,6 +36,7 @@ from app.services.availability import (
     validate_global_arrival,
 )
 from app.services.listings import cost_rating, pagination
+from app.services.reviews import eligible_reviews
 
 
 def invalid_stay(error: StayError) -> APIError:
@@ -88,9 +89,7 @@ async def load_related(session: AsyncSession, ids: list[UUID], now: datetime) ->
         .join(Review, Review.booking_id == Booking.id)
         .where(
             Booking.listing_id.in_(ids),
-            Booking.reservation_state == ReservationState.CONFIRMED,
-            Booking.departure_at <= now,
-            Review.created_at <= now,
+            *eligible_reviews(now),
         )
         .group_by(Booking.listing_id)
     ):

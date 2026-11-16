@@ -63,9 +63,23 @@
 | 2026-11-15 | Confirmation/history render saved fields without requiring current public listing detail | Keeps accepted price/name/location/time readable after changes or terminal removal; existing seed snapshots stay intact | Implemented |
 | 2026-11-15 | Observe pg_blocking_pids in separate-connection concurrency tests | Proves actual database serialization and both writer orders; no process-local mutex or timing-only assertion | Implemented |
 
+## Phase 7 decisions
+
+| Date | Decision | Reason / consequence | Status |
+|---|---|---|---|
+| 2026-11-15 | Create `backend/reviews-ratings` from merged main `7fed27a` | Keeps the reviews milestone separate from merged Phase 6 | Implemented |
+| 2026-11-15 | Reuse existing Review unique booking constraint with INSERT ON CONFLICT DO NOTHING RETURNING | Concurrent duplicates give one saved review and a safe 409; never overwrite or weaken the DB constraint | Implemented |
+| 2026-11-15 | Lock listing then owned booking and read the clock afterward | Consistent writer order; accepted UTC checkout determines eligibility, including exact boundary and lock waits | Implemented |
+| 2026-11-15 | Strict integer rating 1–5 and trimmed plain-text comment 1–2000 characters | Reject coercion, field injection, blank/oversize text and unsupported control characters before PostgreSQL | Implemented |
+| 2026-11-15 | Public reviews expose only id/rating/comment/created_at on approved listings | Keeps customer profile and booking identities private; owner-only creation response includes their booking/listing IDs | Implemented |
+| 2026-11-15 | Past-guest review eligibility survives listing removal/loss of approval | Preserves feedback rights/history while public pages remain hidden; no listing state is changed | Implemented |
+| 2026-11-15 | Public pages and search/detail aggregates share eligible_reviews predicates | Noncancelled checked-out stays and nonfuture submissions produce consistent counts/averages without stored rating edits | Implemented |
+| 2026-11-15 | Make the old raw exclusion test order its uncommitted inserts and observe a real PostgreSQL wait | Full regression found a raw GiST insert deadlock in the test. API booking concurrency remains independently tested under listing locks; no retries/skips or weakened constraints | Implemented |
+| 2026-11-15 | Retain original already-reviewed demo stays; prepare unreviewed stays only in disposable tests | Verifies successful creation without rewriting accepted development history; shared manual demo data preparation remains pending | Implemented |
+
 ## Pending external confirmations
 
 - `[PENDING: team name and member names]`
-- `[PENDING: assigned GitHub repository/board link]`
+- Repository verified from origin: [Vacation Rental App](https://github.com/SuprithaMallaradhya/Vacation-Rental-App); `[PENDING: task-board link]`
 - `[PENDING: instructor burndown-sheet link and course timezone/Demo Day]`
 - `[PENDING: teammate review of API field names and error envelope]`

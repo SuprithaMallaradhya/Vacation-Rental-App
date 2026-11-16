@@ -2,6 +2,8 @@
 
 Updated: November 15, 2026
 
+Later phase checkpoints supersede earlier runtime limitations without erasing their historical results. See the [phase acceptance audit](phase-acceptance.md) for backend coverage and explicitly pending shared/external checks.
+
 ## Phase 0 — complete locally
 
 Implemented repository guidance, design-decision logging, API contract outline, requirement coverage, backlog, and external-check register. The repository is the expected workspace on branch `backend/foundation`. No teammate frontend exists in this checkout, so no frontend files were created or changed.
@@ -281,6 +283,53 @@ The [booking walkthrough and contract](bookings.md) and [frontend JSON examples]
 
 The user subsequently authorized committing and pushing Phase 6 on `backend/bookings-cancellation`. Checkpoint message: `feat: add atomic Customer bookings, history, and cancellation`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
 
+## Phase 7 — implemented and locally verified
+
+Branch: `backend/reviews-ratings`, created without upstream tracking from merged `origin/main` at `7fed27a` (Phase 6 merge). Verified `e6a73e6` is an ancestor of main; the tree was clean before implementation. The implementation was initially handed off without a commit or push.
+
+Implemented Customer POST `/api/v1/reviews` and public GET `/api/v1/listings/{listing_id}/reviews`. Creation requires an owned noncancelled checked-out booking, strict integer rating 1–5 and trimmed plain-text comment 1–2000 characters; server derives identities/time and rejects injected fields. It uses listing-first/booking-second locks, reads the clock after waiting, and enforces the existing unique booking constraint using INSERT ON CONFLICT DO NOTHING RETURNING. Duplicate/ineligible submissions are safe 409s; missing/foreign bookings share 404, and failed writes roll back without rewriting reservations.
+
+Public pages expose id/rating/comment/created_at only, require an approved listing, and use stable newest-first/UUID pagination including huge empty page handling. Removed-listing reviews remain stored and eligible past guests retain their submission right, while public reads stay hidden. Shared eligible_reviews predicates now drive both pages and existing search/detail aggregates, keeping noncancelled checked-out/nonfuture review counts and rounded averages consistent; no-review stays have null average/zero count.
+
+### Files changed
+
+- Added `backend/app/routers/reviews.py`, `schemas/reviews.py`, `services/reviews.py`; updated app wiring and search rating predicates.
+- Added `backend/tests/reviews/` (57 tests) covering lifecycle, strict input validation, role/ownership, public privacy/visibility, checkout boundaries, aggregates, ordering/empty pages, concurrent duplicate/different-stay submissions, lock-wait clock checks, and commit rollback.
+- Corrected a flaky raw-insert PostgreSQL exclusion test in `backend/tests/database/test_schema.py`; the regression failure and reason are recorded below. No application constraint was removed or relaxed.
+- Added `docs/reviews.md`, `docs/fixtures/reviews.json`, and `docs/phase-acceptance.md`; updated README, API contract, coverage, decisions, external checks/backlog known repository link, and this status document.
+- No model, migration, dependency, environment, or CI change was needed. Existing CI discovers the tests. Head remains `0002_listing_removal_audit`.
+
+### Actual commands and results
+
+| Command/check | Actual result |
+|---|---|
+| `git fetch origin`; `git merge-base --is-ancestor e6a73e6 origin/main`; `git switch --no-track -c backend/reviews-ratings origin/main` | Passed: Phase 6 merged at `7fed27a`, new branch created |
+| Initial `make test TEST_PATH=tests/reviews` | Passed: all 53 initial review tests |
+| `make test TEST_PATH=tests/reviews` after concurrency/rollback cases | Passed: all 57 review tests |
+| Initial full `make verify` | Ruff passed; 372 tests passed, 1 failed in the older raw-insert GiST exclusion race with PostgreSQL DeadlockDetectedError; drift check not reached on that run |
+| `make test TEST_PATH=tests/database/test_schema.py::test_exclusion_constraint_with_two_real_transactions` after correction | Passed: one real waiting insert is rejected by the exclusion constraint after the first transaction commits; exactly one row remains |
+| Final `make verify` | Passed: Ruff, all 373 backend tests on Python 3.12.16, and Alembic check with no new upgrade operations; one existing Starlette/AnyIO deprecation warning |
+| `backend/.venv/bin/ruff format --check backend`; `git diff --check` | Passed: 83 Python files formatted; no whitespace errors |
+| `make openapi`; request/response/error fixture and Swagger example model validation | Passed: protected create and public read with typed schemas; generated export remains ignored |
+| Plan-to-OpenAPI method/path comparison | Passed: all 34 planned Phase 3–7 product operations plus documented Host amenities helper (35 total), health/readiness present |
+| Temporary `backend/.venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8011 --no-proxy-headers` | Passed startup/shutdown after smoke checks |
+| Live urllib HTTP checks | Health/readiness/Swagger/ReDoc/OpenAPI/search/public reviews: 200. Review count/average and public privacy agree with cards. Missing listing: JSON 404; oversize page_size: JSON 422; unauthenticated create: JSON 401; request IDs verified. No development review writes |
+| `docker compose ps`; read-only development identity/count SQL | Both services healthy. `vacation_rental_dev`, revision `0002_listing_removal_audit`, 7 users, 12 listings, 18 bookings, 7 reviews, 1 removal; existing development data preserved |
+| Final read-only test identity/catalog SQL | `vacation_rental_test`, 0 public tables, 0 leftover temporary test schemas |
+| Final review of all 22 changed/new files | Local Markdown links and JSON parsed; common secret-signature scan found no matches. Frontend/private ignored files excluded and Git index empty |
+
+### Earlier-phase check and resolved regression
+
+The [phase audit](phase-acceptance.md) maps the plan's Phase 0–7 acceptance areas to implementation/test evidence and explicitly pending items. It does not claim every defect is impossible. The older direct-insert exclusion test exposed a real test scheduling problem: two raw GiST inserts could deadlock instead of producing its expected named IntegrityError. It now holds one inserted row uncommitted, observes a separate connection waiting via pg_blocking_pids, commits the first, and verifies the database constraint rejects the second. It does not use an application row lock or accept/skip deadlocks. Phase 6 independently retains real simultaneous API booking tests with listing-first locks.
+
+An early lint line-length finding was corrected. The audit utility initially matched unrelated roadmap table rows; it was scoped to the endpoint-inventory section and passed. No review test failed. GitHub CI execution for this unpushed phase is unexecuted; local passes do not claim remote CI success.
+
+### Handoff and checkpoint
+
+The [review guide](reviews.md) and [mock JSON](fixtures/reviews.json) are ready for teammate review. All original eligible seeded past bookings already have reviews, so manual attempts on them correctly return 409. Automated tests demonstrate 201/public updates using unreviewed stays only in disposable schemas. Shared successful review demo data and React completed booking → review → listing rating flow remain pending, as do earlier shared UI/browser checks, course timezone/evaluation details, and team/board/instructor links. The known Git origin URL is now recorded rather than left as an unknown placeholder.
+
+No frontend, cloud resource, paid service, or unrelated development data was changed. The user subsequently authorized committing and pushing Phase 7 on `backend/reviews-ratings`. Checkpoint message: `feat: add completed-stay reviews and public listing ratings`. Git history records the final commit identifier; GitHub CI results are tracked separately after push.
+
 ## Next phase
 
-Phase 7 will implement Customer review creation and paginated public listing reviews. It will enforce ownership, a noncancelled checked-out stay, one review per booking (including concurrent duplicate requests), and 1–5 ratings, reusing the existing public rating aggregates. Phase 7 has not started.
+Phase 8 will implement Host/Admin analytics with exact UTC 30/60/90-day windows, owner scoping, ZIP rules, booking-value/cancellation metrics and zero-filled daily buckets, tested against boundary fixtures. Phase 8 has not started.
