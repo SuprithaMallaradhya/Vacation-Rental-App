@@ -4,12 +4,11 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
-from sqlalchemy import delete, func, select
+from sqlalchemy import Select, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import APIError
 from app.models import (
-    AdminAction,
     Amenity,
     AvailabilityBlock,
     Booking,
@@ -20,10 +19,9 @@ from app.models import (
     ListingMedia,
     ListingRemoval,
 )
-from app.models.enums import AdminActionType, ListingStatus, MediaType, ReservationState
-from app.schemas.common import Paginated, Pagination
+from app.models.enums import ListingStatus, MediaType, ReservationState
+from app.schemas.common import Paginated
 from app.schemas.listings import (
-    AuditResponse,
     BlockInput,
     BlockResponse,
     BookingRuleInput,
@@ -32,10 +30,10 @@ from app.schemas.listings import (
     ListingDetail,
     ListingPatch,
     ListingSummary,
-    MediaInput,
-    MediaPatch,
-    MediaResponse,
 )
+from app.services.listing_state import state_of
+from app.services.pagination import PageQuery
+from app.services.scopes import AccessScope
 
 LOCATION_FIELDS = {
     "address_line1",
@@ -75,16 +73,12 @@ async def lock_listing(session: AsyncSession, listing_id: UUID, *, host_id: UUID
 
 
 def ensure_mutable(listing: Listing) -> None:
-    if listing.status == ListingStatus.REMOVED:
-        raise conflict("Removed listings cannot be changed", "LISTING_REMOVED")
+    state_of(listing).ensure_mutable()
 
 
 def host_edit(listing: Listing, *, material=False, changed=True) -> None:
     if changed:
-        if listing.status == ListingStatus.REJECTED or (
-            listing.status == ListingStatus.APPROVED and material
-        ):
-            listing.status = ListingStatus.PENDING
+        listing.status = state_of(listing).after_host_edit(material=material)
         listing.updated_at = datetime.now(UTC)
 
 
@@ -152,42 +146,32 @@ async def finish(session: AsyncSession, listing: Listing) -> ListingDetail:
     return result
 
 
-def pagination(page: int, page_size: int, total: int) -> Pagination:
-    return Pagination(
-        page=page,
-        page_size=page_size,
-        total_items=total,
-        total_pages=(total + page_size - 1) // page_size,
-    )
+class ListingPage(PageQuery[Listing, ListingSummary]):
+    def __init__(self, scope: AccessScope, status: ListingStatus | None = None) -> None:
+        self.scope, self.status = scope, status
+
+    def statement(self) -> Select:
+        filters = self.scope.listing_filters()
+        if self.status is not None:
+            filters.append(Listing.status == self.status)
+        return select(Listing).where(*filters)
+
+    def order_by(self):
+        return (Listing.created_at.desc(), Listing.id)
+
+    def to_item(self, row: Listing) -> ListingSummary:
+        return ListingSummary.model_validate(listing_values(row))
 
 
 async def listing_page(
     session: AsyncSession,
     page: int,
     page_size: int,
+    scope: AccessScope,
     *,
-    host_id: UUID | None = None,
     status: ListingStatus | None = None,
 ) -> Paginated[ListingSummary]:
-    filters = []
-    if host_id is not None:
-        filters.append(Listing.host_id == host_id)
-    if status is not None:
-        filters.append(Listing.status == status)
-    total = await session.scalar(select(func.count()).select_from(Listing).where(*filters))
-    rows = (
-        await session.scalars(
-            select(Listing)
-            .where(*filters)
-            .order_by(Listing.created_at.desc(), Listing.id)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-        )
-    ).all()
-    return Paginated(
-        data=[ListingSummary.model_validate(listing_values(row)) for row in rows],
-        pagination=pagination(page, page_size, total),
-    )
+    return await ListingPage(scope, status).fetch(session, page, page_size)
 
 
 async def validate_amenities(session: AsyncSession, ids: list[UUID]) -> None:
@@ -395,63 +379,23 @@ async def nested_row(session, model, listing_id: UUID, identifier: UUID):
     return row
 
 
-async def add_media(session, host_id, listing_id, request: MediaInput) -> MediaResponse:
-    listing = await lock_listing(session, listing_id, host_id=host_id)
-    ensure_mutable(listing)
-    count = await session.scalar(
-        select(func.count()).select_from(ListingMedia).where(ListingMedia.listing_id == listing.id)
-    )
-    if count >= 30:
-        raise conflict("A listing supports at most 30 media URLs")
-    media = ListingMedia(listing_id=listing.id, **request.model_dump())
-    session.add(media)
-    host_edit(listing, material=True)
-    await finish(session, listing)
-    return MediaResponse.model_validate(media)
+class BlockPage(PageQuery[AvailabilityBlock, BlockResponse]):
+    def __init__(self, listing_id: UUID) -> None:
+        self.listing_id = listing_id
 
+    def statement(self) -> Select:
+        return select(AvailabilityBlock).where(AvailabilityBlock.listing_id == self.listing_id)
 
-async def patch_media(session, host_id, listing_id, media_id, request: MediaPatch) -> MediaResponse:
-    listing = await lock_listing(session, listing_id, host_id=host_id)
-    ensure_mutable(listing)
-    media = await nested_row(session, ListingMedia, listing.id, media_id)
-    changed = False
-    for field, value in request.model_dump(exclude_unset=True).items():
-        if getattr(media, field) != value:
-            setattr(media, field, value)
-            changed = True
-    host_edit(listing, material=True, changed=changed)
-    await finish(session, listing)
-    return MediaResponse.model_validate(media)
+    def order_by(self):
+        return (AvailabilityBlock.start_date, AvailabilityBlock.id)
 
-
-async def delete_media(session, host_id, listing_id, media_id):
-    listing = await lock_listing(session, listing_id, host_id=host_id)
-    ensure_mutable(listing)
-    media = await nested_row(session, ListingMedia, listing.id, media_id)
-    await session.delete(media)
-    host_edit(listing, material=True)
-    await finish(session, listing)
+    def to_item(self, row: AvailabilityBlock) -> BlockResponse:
+        return BlockResponse.model_validate(row)
 
 
 async def blocks_page(session, host_id, listing_id, page, page_size) -> Paginated[BlockResponse]:
     await get_listing(session, listing_id, host_id=host_id)
-    condition = AvailabilityBlock.listing_id == listing_id
-    total = await session.scalar(
-        select(func.count()).select_from(AvailabilityBlock).where(condition)
-    )
-    blocks = (
-        await session.scalars(
-            select(AvailabilityBlock)
-            .where(condition)
-            .order_by(AvailabilityBlock.start_date, AvailabilityBlock.id)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-        )
-    ).all()
-    return Paginated(
-        data=[BlockResponse.model_validate(row) for row in blocks],
-        pagination=pagination(page, page_size, total),
-    )
+    return await BlockPage(listing_id).fetch(session, page, page_size)
 
 
 async def add_block(session, host_id, listing_id, request: BlockInput) -> BlockResponse:
@@ -494,62 +438,3 @@ async def delete_block(session, host_id, listing_id, block_id):
     await session.delete(block)
     host_edit(listing)
     await finish(session, listing)
-
-
-async def moderate(
-    session, admin_id, listing_id, action: AdminActionType, reason=None
-) -> ListingDetail:
-    listing = await lock_listing(session, listing_id)
-    ensure_mutable(listing)
-    if listing.status != ListingStatus.PENDING:
-        raise conflict("Only pending listings can be approved or rejected", "INVALID_LISTING_STATE")
-    if action == AdminActionType.APPROVED:
-        await ensure_complete(session, listing)
-        listing.status = ListingStatus.APPROVED
-    else:
-        listing.status = ListingStatus.REJECTED
-    listing.updated_at = datetime.now(UTC)
-    session.add(AdminAction(admin_id=admin_id, listing_id=listing.id, action=action, reason=reason))
-    return await finish(session, listing)
-
-
-async def remove_listing(session, actor_id, listing_id, reason, *, host_id=None) -> ListingDetail:
-    listing = await lock_listing(session, listing_id, host_id=host_id)
-    if listing.status == ListingStatus.REMOVED:
-        return await listing_detail(session, listing)
-    now = datetime.now(UTC)
-    listing.status = ListingStatus.REMOVED
-    listing.removed_at = now
-    listing.updated_at = now
-    session.add(
-        ListingRemoval(listing_id=listing.id, actor_id=actor_id, reason=reason, created_at=now)
-    )
-    if host_id is None:
-        session.add(
-            AdminAction(
-                admin_id=actor_id,
-                listing_id=listing.id,
-                action=AdminActionType.REMOVED,
-                reason=reason,
-                created_at=now,
-            )
-        )
-    return await finish(session, listing)
-
-
-async def audit_page(session, page, page_size, listing_id=None) -> Paginated[AuditResponse]:
-    filters = [AdminAction.listing_id == listing_id] if listing_id else []
-    total = await session.scalar(select(func.count()).select_from(AdminAction).where(*filters))
-    rows = (
-        await session.scalars(
-            select(AdminAction)
-            .where(*filters)
-            .order_by(AdminAction.created_at.desc(), AdminAction.id)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-        )
-    ).all()
-    return Paginated(
-        data=[AuditResponse.model_validate(row) for row in rows],
-        pagination=pagination(page, page_size, total),
-    )

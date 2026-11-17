@@ -5,11 +5,17 @@ from fastapi import APIRouter, Depends
 
 from app.core.dependencies import SessionDep, require_admin
 from app.models import User
-from app.models.enums import AdminActionType, ListingStatus
+from app.models.enums import ListingStatus
 from app.routers.host import Page, PageSize
 from app.schemas.common import ErrorResponse, Paginated, Success
 from app.schemas.listings import AuditResponse, ListingDetail, ListingSummary, ReasonInput
-from app.services import listings
+from app.services import listings, moderation
+from app.services.moderation import (
+    ApproveListingCommand,
+    RejectListingCommand,
+    RemoveListingCommand,
+)
+from app.services.scopes import AdminScope
 
 AdminUser = Annotated[User, Depends(require_admin)]
 router = APIRouter(
@@ -31,7 +37,7 @@ async def list_all(
     page_size: PageSize = 10,
     status: ListingStatus | None = None,
 ):
-    return await listings.listing_page(session, page, page_size, status=status)
+    return await listings.listing_page(session, page, page_size, AdminScope(), status=status)
 
 
 @router.get(
@@ -40,7 +46,9 @@ async def list_all(
     summary="List pending listings for moderation",
 )
 async def pending(session: SessionDep, admin: AdminUser, page: Page = 1, page_size: PageSize = 10):
-    return await listings.listing_page(session, page, page_size, status=ListingStatus.PENDING)
+    return await listings.listing_page(
+        session, page, page_size, AdminScope(), status=ListingStatus.PENDING
+    )
 
 
 @router.get(
@@ -59,9 +67,7 @@ async def detail(listing_id: UUID, session: SessionDep, admin: AdminUser):
     summary="Approve a complete pending listing and record an audit action",
 )
 async def approve(listing_id: UUID, session: SessionDep, admin: AdminUser):
-    return Success(
-        data=await listings.moderate(session, admin.id, listing_id, AdminActionType.APPROVED)
-    )
+    return Success(data=await ApproveListingCommand(admin.id, listing_id).execute(session))
 
 
 @router.patch(
@@ -71,9 +77,7 @@ async def approve(listing_id: UUID, session: SessionDep, admin: AdminUser):
 )
 async def reject(listing_id: UUID, request: ReasonInput, session: SessionDep, admin: AdminUser):
     return Success(
-        data=await listings.moderate(
-            session, admin.id, listing_id, AdminActionType.REJECTED, request.reason
-        )
+        data=await RejectListingCommand(admin.id, listing_id, request.reason).execute(session)
     )
 
 
@@ -84,7 +88,9 @@ async def reject(listing_id: UUID, request: ReasonInput, session: SessionDep, ad
 )
 async def remove(listing_id: UUID, request: ReasonInput, session: SessionDep, admin: AdminUser):
     return Success(
-        data=await listings.remove_listing(session, admin.id, listing_id, request.reason)
+        data=await RemoveListingCommand(admin.id, listing_id, request.reason, AdminScope()).execute(
+            session
+        )
     )
 
 
@@ -100,4 +106,4 @@ async def audit(
     page_size: PageSize = 10,
     listing_id: UUID | None = None,
 ):
-    return await listings.audit_page(session, page, page_size, listing_id)
+    return await moderation.audit_page(session, page, page_size, listing_id)

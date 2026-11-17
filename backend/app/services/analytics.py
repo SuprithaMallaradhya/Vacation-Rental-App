@@ -1,8 +1,8 @@
 from collections import defaultdict
 from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal
-from uuid import UUID
 
 from sqlalchemy import Date, String, cast, func, literal, null, select, union_all
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,37 +16,40 @@ from app.schemas.analytics import (
     DailyBookings,
     RentalsByZip,
 )
+from app.services.scopes import AccessScope
 
 ZERO = Decimal("0.00")
 
 
-def empty_metrics():
-    return {
-        "bookings_created": 0,
-        "cancelled_bookings": 0,
-        "net_bookings": 0,
-        "booking_value_usd": ZERO,
-    }
+@dataclass
+class BookingMetrics:
+    """Value object for one group of booking counts (total, per ZIP, per day)."""
 
+    bookings_created: int = 0
+    cancelled_bookings: int = 0
+    net_bookings: int = 0
+    booking_value_usd: Decimal = ZERO
 
-def accumulate(metrics, row):
-    metrics["bookings_created"] += row["bookings_created"]
-    metrics["cancelled_bookings"] += row["cancelled_bookings"]
-    metrics["net_bookings"] += row["bookings_created"] - row["cancelled_bookings"]
-    metrics["booking_value_usd"] += row["booking_value_usd"].quantize(Decimal("0.01"))
+    def add(self, row) -> None:
+        self.bookings_created += row["bookings_created"]
+        self.cancelled_bookings += row["cancelled_bookings"]
+        self.net_bookings += row["bookings_created"] - row["cancelled_bookings"]
+        self.booking_value_usd += row["booking_value_usd"].quantize(Decimal("0.01"))
+
+    def as_dict(self) -> dict:
+        return asdict(self)
 
 
 async def analytics(
     session: AsyncSession,
     query: AnalyticsQuery,
     clock: Callable[[], datetime],
-    *,
-    host_id: UUID | None = None,
+    scope: AccessScope,
 ) -> AnalyticsResponse:
     end = clock().astimezone(UTC)
     start = end - timedelta(days=query.period_days)
-    listing_filters = [Listing.host_id == host_id] if host_id is not None else []
-    booking_filters = [Listing.host_id == host_id] if host_id is not None else []
+    listing_filters = scope.listing_filters()
+    booking_filters = scope.listing_filters()
     if query.zip_code is not None:
         listing_filters.append(Listing.zip_code == query.zip_code)
         booking_filters.append(Booking.listing_zip_snapshot == query.zip_code)
@@ -94,11 +97,11 @@ async def analytics(
         .group_by(utc_date, Booking.listing_zip_snapshot)
     )
     rows = (await session.execute(union_all(current_listings, historical_bookings))).mappings()
-    totals = empty_metrics()
+    totals = BookingMetrics()
     status_counts = dict.fromkeys(ListingStatus, 0)
     rentals = defaultdict(int)
-    by_zip = defaultdict(empty_metrics)
-    by_day = defaultdict(empty_metrics)
+    by_zip = defaultdict(BookingMetrics)
+    by_day = defaultdict(BookingMetrics)
     new_listings = 0
     for row in rows:
         if row["kind"] == "listing":
@@ -106,9 +109,9 @@ async def analytics(
             status_counts[ListingStatus(row["listing_status"])] += row["total_listings"]
             new_listings += row["new_listings_in_period"]
         else:
-            accumulate(totals, row)
-            accumulate(by_zip[row["zip_code"]], row)
-            accumulate(by_day[row["booking_date"]], row)
+            totals.add(row)
+            by_zip[row["zip_code"]].add(row)
+            by_day[row["booking_date"]].add(row)
 
     daily = []
     day = start.date()
@@ -121,13 +124,13 @@ async def analytics(
                 date=day,
                 window_start=max(start, midnight),
                 window_end=min(end, following),
-                **by_day[day],
+                **by_day[day].as_dict(),
             )
         )
         day = following.date()
     return AnalyticsResponse(
-        **totals,
-        scope="HOST" if host_id is not None else "ADMIN",
+        **totals.as_dict(),
+        scope=scope.label,
         period_days=query.period_days,
         zip_code=query.zip_code,
         window_start=start,
@@ -140,7 +143,8 @@ async def analytics(
             for zip_code in sorted(rentals)
         ],
         bookings_by_zip=[
-            BookingsByZip(zip_code=zip_code, **by_zip[zip_code]) for zip_code in sorted(by_zip)
+            BookingsByZip(zip_code=zip_code, **by_zip[zip_code].as_dict())
+            for zip_code in sorted(by_zip)
         ],
         daily_bookings=daily,
     )

@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-SCHEMA_REVISION = "0002_listing_removal_audit"
+SCHEMA_REVISION = "0003_local_media_urls"
 REQUIRED_TABLES = (
     "users",
     "listings",

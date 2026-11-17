@@ -367,6 +367,8 @@ Finish the teammate's React screens/client and Google Maps integration, verify c
 
 - [Implementation status](docs/implementation-status.md)
 - [Design decisions](docs/design-decisions.md)
+- [Design patterns and code smells](docs/design-patterns.md)
+- [Media storage and uploads](docs/media-storage.md)
 - [API contract](docs/api-contract.md)
 - [Authentication and frontend handoff](docs/authentication.md)
 - [Host listings and Admin moderation](docs/listing-management.md)

@@ -10,6 +10,7 @@ from app.models import User
 from app.schemas.analytics import AnalyticsQuery, AnalyticsResponse
 from app.schemas.common import ErrorResponse, Success
 from app.services.analytics import analytics
+from app.services.scopes import AdminScope, HostScope
 
 Host = Annotated[User, Depends(require_host)]
 Admin = Annotated[User, Depends(require_admin)]
@@ -32,7 +33,7 @@ router = APIRouter(
 async def host_analytics(
     query: Annotated[AnalyticsQuery, Query()], session: SessionDep, host: Host, clock: Clock
 ):
-    return Success(data=await analytics(session, query, clock, host_id=host.id))
+    return Success(data=await analytics(session, query, clock, HostScope(host.id)))
 
 
 @router.get(
@@ -47,4 +48,4 @@ async def host_analytics(
 async def admin_analytics(
     query: Annotated[AnalyticsQuery, Query()], session: SessionDep, admin: Admin, clock: Clock
 ):
-    return Success(data=await analytics(session, query, clock))
+    return Success(data=await analytics(session, query, clock, AdminScope()))

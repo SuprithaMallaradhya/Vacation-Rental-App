@@ -17,6 +17,7 @@ from pydantic import (
     model_validator,
 )
 
+from app.core.config import get_settings
 from app.models.enums import AdminActionType, ListingStatus, MediaType
 from app.schemas.auth import Credentials
 
@@ -33,10 +34,18 @@ def contact_email(value: str) -> str:
     return Credentials.normalize_email(value) if value else ""
 
 
+def local_media_url(value: str) -> bool:
+    """Development/test only: local storage serves uploads over plain HTTP."""
+    settings = get_settings()
+    return settings.app_env in {"development", "test"} and value.startswith(
+        f"{settings.media_public_base_url}/"
+    )
+
+
 def https_url(value: str) -> str:
     parsed = HttpUrl(value)
     if (
-        parsed.scheme != "https"
+        (parsed.scheme != "https" and not local_media_url(value))
         or parsed.username
         or parsed.password
         or any(c.isspace() for c in value)
@@ -373,6 +382,35 @@ class ORMResponse(BaseModel):
 class AmenityResponse(ORMResponse):
     id: UUID
     name: str
+
+
+MEDIA_CONTENT_TYPES: dict[str, tuple[str, MediaType]] = {
+    "image/jpeg": (".jpg", MediaType.IMAGE),
+    "image/png": (".png", MediaType.IMAGE),
+    "image/webp": (".webp", MediaType.IMAGE),
+    "video/mp4": (".mp4", MediaType.VIDEO),
+    "video/webm": (".webm", MediaType.VIDEO),
+}
+UploadContentType = Literal["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"]
+
+
+class MediaUploadRequest(InputModel):
+    content_type: UploadContentType = Field(description="MIME type of the file to upload")
+    size_bytes: int = Field(gt=0, le=2**40, description="Exact file size in bytes")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={"examples": [{"content_type": "image/jpeg", "size_bytes": 482133}]},
+    )
+
+
+class MediaUploadResponse(BaseModel):
+    upload_url: str = Field(description="Send the file bytes here; expires at expires_at")
+    method: str = Field(description="HTTP method for the upload request")
+    headers: dict[str, str] = Field(description="Headers the upload request must include")
+    public_url: str = Field(description="Use as `url` when adding the media after uploading")
+    media_type: MediaType
+    max_bytes: int
+    expires_at: datetime
 
 
 class MediaResponse(ORMResponse):

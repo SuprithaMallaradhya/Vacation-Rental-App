@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import AdminAction, Booking, ListingRemoval, Review
 from app.models.enums import ReservationState
 from app.services import listings
+from app.services.moderation import RemoveListingCommand
+from app.services.scopes import HostScope
 from seed.demo import demo_id
 from tests.listings.helpers import admin_path, auth, block, create, hours, path, payload, rules
 
@@ -355,13 +357,12 @@ async def test_waiting_writer_rechecks_removed_state_after_lock(api, database_en
             )
             await asyncio.wait_for(waiting.wait(), timeout=5)
             assert not task.done()
-            await listings.remove_listing(
-                holder,
+            await RemoveListingCommand(
                 demo_id("user/1"),
                 demo_id("listing/0"),
                 "Removed while another writer waited",
-                host_id=demo_id("user/1"),
-            )
+                HostScope(demo_id("user/1")),
+            ).execute(holder)
             response = await asyncio.wait_for(task, timeout=5)
             assert response.status_code == 409
             assert response.json()["error"]["code"] == "LISTING_REMOVED"

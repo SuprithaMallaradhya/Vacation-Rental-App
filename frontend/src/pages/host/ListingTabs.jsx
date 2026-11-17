@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { hostApi } from '../../api/endpoints';
+import { UPLOAD_ACCEPT, UPLOAD_TYPES, uploadToStorage } from '../../api/upload';
 import { useToast } from '../../context/ToastContext';
 import useAsync from '../../hooks/useAsync';
 import { ConfirmModal, Empty, ErrorAlert, Field, Pagination, Spinner } from '../../components/ui';
@@ -51,7 +52,7 @@ function MediaRow({ listing, item, onChanged }) {
   return (
     <div className="media-row">
       <div className="thumb">
-        {item.media_type === 'IMAGE' ? <img src={item.url} alt={item.caption || ''} /> : <span className="small">Video</span>}
+        {item.media_type === 'IMAGE' ? <img src={item.url} alt={item.caption || ''} /> : <video src={item.url} muted preload="metadata" />}
       </div>
       <div>
         <div className="small muted" style={{ wordBreak: 'break-all' }}>
@@ -87,45 +88,93 @@ function MediaRow({ listing, item, onChanged }) {
 export function PhotosTab({ listing, onChanged }) {
   const toast = useToast();
   const [form, setForm] = useState({ url: '', media_type: 'IMAGE', caption: '', sort_order: String(listing.media.length) });
+  const [source, setSource] = useState('upload');
+  const [file, setFile] = useState(null);
+  const [fileKey, setFileKey] = useState(0);
+  const [progress, setProgress] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const errors = fieldErrors(error);
   const items = [...listing.media].sort((a, b) => a.sort_order - b.sort_order);
+  const fileType = file ? UPLOAD_TYPES[file.type] : null;
+
+  function pickFile(event) {
+    const picked = event.target.files?.[0] || null;
+    setError(null);
+    setFile(picked);
+    if (picked && UPLOAD_TYPES[picked.type]) setForm((f) => ({ ...f, media_type: UPLOAD_TYPES[picked.type] }));
+  }
 
   async function add(event) {
     event.preventDefault();
     setBusy(true);
     setError(null);
     try {
+      let url = form.url.trim();
+      let mediaType = form.media_type;
+      if (source === 'upload') {
+        // 1) ask the API for a one-file upload URL, 2) send the file straight to storage.
+        const ticket = (await hostApi.mediaUploadUrl(listing.id, { content_type: file.type, size_bytes: file.size })).data;
+        setProgress(0);
+        await uploadToStorage(ticket, file, setProgress);
+        url = ticket.public_url;
+        mediaType = ticket.media_type;
+      }
+      // 3) save the media record (the API verifies uploaded files before saving).
       await hostApi.addMedia(listing.id, {
-        url: form.url.trim(),
-        media_type: form.media_type,
+        url,
+        media_type: mediaType,
         caption: form.caption.trim() || null,
         sort_order: parseInt(form.sort_order, 10) || 0,
       });
       toast.success('Media added.');
       setForm({ url: '', media_type: 'IMAGE', caption: '', sort_order: String(listing.media.length + 1) });
+      setFile(null);
+      setFileKey((k) => k + 1);
       onChanged();
     } catch (err) {
       setError(err);
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   }
+
+  const ready = source === 'upload' ? Boolean(fileType) : Boolean(form.url.trim());
 
   return (
     <div className="stack">
       <section className="card">
         <h2>Add a photo or video</h2>
-        <p className="muted">Paste an HTTPS link. At least one image is required before approval.</p>
+        <p className="muted">Upload a file or paste an HTTPS link. At least one image is required before approval.</p>
+        <div className="form-row" role="radiogroup" aria-label="Media source">
+          <label>
+            <input type="radio" name="m-source" checked={source === 'upload'} onChange={() => setSource('upload')} /> Upload a file
+          </label>
+          <label>
+            <input type="radio" name="m-source" checked={source === 'link'} onChange={() => setSource('link')} /> Paste a link
+          </label>
+        </div>
         <ErrorAlert error={error} hideDetails={Object.keys(errors).length > 0} />
         <form onSubmit={add}>
-          <Field label="Media URL" htmlFor="m-url" error={errors.url}>
-            <input id="m-url" type="url" placeholder="https://…" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} required />
-          </Field>
+          {source === 'upload' ? (
+            <Field label="Photo or video (JPEG, PNG, WebP, MP4, WebM)" htmlFor="m-file" error={errors.size_bytes || errors.content_type || errors.url}>
+              <input key={fileKey} id="m-file" type="file" accept={UPLOAD_ACCEPT} onChange={pickFile} required />
+              {file && !fileType && <span className="small">This file type is not supported.</span>}
+              {progress !== null && (
+                <progress max="100" value={progress} aria-label="Upload progress">
+                  {progress}%
+                </progress>
+              )}
+            </Field>
+          ) : (
+            <Field label="Media URL" htmlFor="m-url" error={errors.url}>
+              <input id="m-url" type="url" placeholder="https://…" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} required />
+            </Field>
+          )}
           <div className="form-row">
             <Field label="Type" htmlFor="m-type">
-              <select id="m-type" value={form.media_type} onChange={(e) => setForm((f) => ({ ...f, media_type: e.target.value }))}>
+              <select id="m-type" value={form.media_type} disabled={source === 'upload'} onChange={(e) => setForm((f) => ({ ...f, media_type: e.target.value }))}>
                 <option value="IMAGE">Image</option>
                 <option value="VIDEO">Video</option>
               </select>
@@ -137,8 +186,8 @@ export function PhotosTab({ listing, onChanged }) {
               <input id="m-order" type="number" min="0" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))} />
             </Field>
           </div>
-          <button className="btn" disabled={busy || !form.url.trim()}>
-            {busy ? 'Adding…' : 'Add media'}
+          <button className="btn" disabled={busy || !ready}>
+            {busy ? (progress !== null ? `Uploading… ${progress}%` : 'Adding…') : 'Add media'}
           </button>
         </form>
       </section>

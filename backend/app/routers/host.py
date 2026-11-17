@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 
-from app.core.dependencies import SessionDep, require_host
+from app.core.dependencies import SessionDep, StorageDep, require_host
 from app.models import Amenity, User
 from app.models.enums import ListingStatus
 from app.schemas.common import ErrorResponse, Paginated, Success
@@ -21,10 +21,14 @@ from app.schemas.listings import (
     MediaInput,
     MediaPatch,
     MediaResponse,
+    MediaUploadRequest,
+    MediaUploadResponse,
     ReasonInput,
     RulesReplace,
 )
-from app.services import listings
+from app.services import listings, media
+from app.services.moderation import RemoveListingCommand
+from app.services.scopes import HostScope
 
 HostUser = Annotated[User, Depends(require_host)]
 Page = Annotated[int, Query(ge=1)]
@@ -64,7 +68,7 @@ async def list_own(
     page_size: PageSize = 10,
     status: ListingStatus | None = None,
 ):
-    return await listings.listing_page(session, page, page_size, host_id=host.id, status=status)
+    return await listings.listing_page(session, page, page_size, HostScope(host.id), status=status)
 
 
 @router.get(
@@ -93,9 +97,9 @@ async def patch(listing_id: UUID, request: ListingPatch, session: SessionDep, ho
 )
 async def remove(listing_id: UUID, request: ReasonInput, session: SessionDep, host: HostUser):
     return Success(
-        data=await listings.remove_listing(
-            session, host.id, listing_id, request.reason, host_id=host.id
-        )
+        data=await RemoveListingCommand(
+            host.id, listing_id, request.reason, HostScope(host.id)
+        ).execute(session)
     )
 
 
@@ -149,13 +153,38 @@ async def delete_block(listing_id: UUID, block_id: UUID, session: SessionDep, ho
 
 
 @router.post(
+    "/listings/{listing_id}/media/upload-url",
+    status_code=201,
+    response_model=Success[MediaUploadResponse],
+    summary="Get a short-lived upload URL for one photo or video",
+    description=(
+        "Step 1 of an upload: send the returned `headers` with the file bytes to `upload_url` "
+        "using `method`, then add the media with `url` = `public_url`. Nothing is saved until "
+        "then. JPEG/PNG/WebP images and MP4/WebM videos; size limits apply."
+    ),
+)
+async def media_upload_url(
+    listing_id: UUID,
+    request: MediaUploadRequest,
+    session: SessionDep,
+    host: HostUser,
+    storage: StorageDep,
+):
+    return Success(
+        data=await media.create_media_upload(session, storage, host.id, listing_id, request)
+    )
+
+
+@router.post(
     "/listings/{listing_id}/media",
     status_code=201,
     response_model=Success[MediaResponse],
-    summary="Add an HTTPS media URL",
+    summary="Add an uploaded file or an external HTTPS media URL",
 )
-async def add_media(listing_id: UUID, request: MediaInput, session: SessionDep, host: HostUser):
-    return Success(data=await listings.add_media(session, host.id, listing_id, request))
+async def add_media(
+    listing_id: UUID, request: MediaInput, session: SessionDep, host: HostUser, storage: StorageDep
+):
+    return Success(data=await media.add_media(session, storage, host.id, listing_id, request))
 
 
 @router.patch(
@@ -164,9 +193,16 @@ async def add_media(listing_id: UUID, request: MediaInput, session: SessionDep, 
     summary="Replace or reorder an owned media URL",
 )
 async def patch_media(
-    listing_id: UUID, media_id: UUID, request: MediaPatch, session: SessionDep, host: HostUser
+    listing_id: UUID,
+    media_id: UUID,
+    request: MediaPatch,
+    session: SessionDep,
+    host: HostUser,
+    storage: StorageDep,
 ):
-    return Success(data=await listings.patch_media(session, host.id, listing_id, media_id, request))
+    return Success(
+        data=await media.patch_media(session, storage, host.id, listing_id, media_id, request)
+    )
 
 
 @router.delete(
@@ -174,6 +210,8 @@ async def patch_media(
     response_model=Success[DeletedResponse],
     summary="Remove an owned media URL",
 )
-async def delete_media(listing_id: UUID, media_id: UUID, session: SessionDep, host: HostUser):
-    await listings.delete_media(session, host.id, listing_id, media_id)
+async def delete_media(
+    listing_id: UUID, media_id: UUID, session: SessionDep, host: HostUser, storage: StorageDep
+):
+    await media.delete_media(session, storage, host.id, listing_id, media_id)
     return Success(data=DeletedResponse(id=media_id))

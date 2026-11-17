@@ -1,19 +1,29 @@
+from abc import ABC, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select, update
+from sqlalchemy import Select, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import APIError
-from app.models import Booking, ListingBookingRule
-from app.models.enums import ListingStatus, ReservationState
+from app.models import Booking, Listing, ListingBookingRule
+from app.models.enums import ReservationState
 from app.schemas.bookings import BookingCreate, BookingResponse
 from app.schemas.common import Paginated
 from app.services import listings
-from app.services.availability import StayError, occupied_listing_ids, resolve_listing_stay
+from app.services.availability import (
+    ResolvedStay,
+    StayError,
+    StayRequest,
+    occupied_listing_ids,
+    resolve_listing_stay,
+)
+from app.services.listing_state import state_of
+from app.services.pagination import PageQuery
 
 Clock = Callable[[], datetime]
 
@@ -48,67 +58,140 @@ async def owned_booking(session: AsyncSession, customer_id: UUID, booking_id: UU
     return booking
 
 
+# ---------------------------------------------------------------------------
+# Chain of Responsibility: each check validates one booking rule and passes
+# the shared context to the next. Order matters: the listing lock comes first
+# (every writer locks the listing before anything else), local stay rules
+# (422) are reported before overlapping nights (409).
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class BookingContext:
+    session: AsyncSession
+    request: BookingCreate
+    clock: Clock
+    stay_request: StayRequest = field(init=False)
+    listing: Listing | None = None
+    stay: ResolvedStay | None = None
+    now: datetime | None = None
+
+    def __post_init__(self) -> None:
+        self.stay_request = self.request.stay_request()
+
+
+class BookingCheck(ABC):
+    def __init__(self) -> None:
+        self._next: BookingCheck | None = None
+
+    def then(self, check: "BookingCheck") -> "BookingCheck":
+        self._next = check
+        return check
+
+    async def handle(self, context: BookingContext) -> None:
+        await self.check(context)
+        if self._next is not None:
+            await self._next.handle(context)
+
+    @abstractmethod
+    async def check(self, context: BookingContext) -> None:
+        """Raise APIError to stop the chain."""
+
+
+class ListingIsBookable(BookingCheck):
+    async def check(self, context):
+        context.listing = await listings.lock_listing(context.session, context.request.listing_id)
+        if not state_of(context.listing).accepts_bookings:
+            raise APIError(409, "LISTING_UNAVAILABLE", "Listing is not available for booking")
+
+
+class StayFollowsListingRules(BookingCheck):
+    """Dates, local arrival/departure windows, capacity, 1–14 nights, DST."""
+
+    async def check(self, context):
+        rules = list(
+            (
+                await context.session.scalars(
+                    select(ListingBookingRule).where(
+                        ListingBookingRule.listing_id == context.listing.id
+                    )
+                )
+            ).all()
+        )
+        # Read the clock only after the listing lock is held.
+        context.now = context.clock()
+        try:
+            context.stay = resolve_listing_stay(
+                context.listing, context.stay_request, rules, context.now
+            )
+        except StayError as exc:
+            raise APIError(
+                422, exc.code, str(exc), details=[{"field": exc.field, "message": str(exc)}]
+            ) from None
+
+
+class NightsAreFree(BookingCheck):
+    async def check(self, context):
+        occupied = await occupied_listing_ids(
+            context.session, [context.listing.id], context.stay_request
+        )
+        if context.listing.id in occupied:
+            raise APIError(409, "DATES_UNAVAILABLE", "Requested nights are not available")
+
+
+def booking_checks() -> BookingCheck:
+    first = ListingIsBookable()
+    first.then(StayFollowsListingRules()).then(NightsAreFree())
+    return first
+
+
+def new_booking(customer_id: UUID, listing: Listing, stay: ResolvedStay, now: datetime) -> Booking:
+    """Factory: snapshot the listing so confirmations survive later edits/removal."""
+    address = ", ".join(
+        part
+        for part in (
+            listing.address_line1,
+            listing.address_line2,
+            listing.city,
+            listing.state,
+            listing.zip_code,
+        )
+        if part
+    )
+    return Booking(
+        listing_id=listing.id,
+        customer_id=customer_id,
+        check_in=stay.check_in,
+        check_out=stay.check_out,
+        arrival_at=stay.arrival_at,
+        departure_at=stay.departure_at,
+        guests=stay.guests,
+        nightly_price_snapshot=stay.nightly_price,
+        total_cost=stay.total_cost,
+        currency=stay.currency,
+        listing_name_snapshot=listing.name,
+        listing_address_snapshot=address,
+        listing_zip_snapshot=listing.zip_code,
+        listing_timezone_snapshot=listing.timezone,
+        reservation_state=ReservationState.CONFIRMED,
+        cancelled_at=None,
+        created_at=now,
+        updated_at=now,
+    )
+
+
 async def create_booking(
     session: AsyncSession, customer_id: UUID, request: BookingCreate, clock: Clock
 ) -> BookingResponse:
     # Auth already began this request's transaction. Keep the listing lock through
     # all validation, snapshot insertion and commit, just like other writers.
     try:
-        listing = await listings.lock_listing(session, request.listing_id)
-        if listing.status != ListingStatus.APPROVED:
-            raise APIError(409, "LISTING_UNAVAILABLE", "Listing is not available for booking")
-        rules = list(
-            (
-                await session.scalars(
-                    select(ListingBookingRule).where(ListingBookingRule.listing_id == listing.id)
-                )
-            ).all()
-        )
-        stay_request = request.stay_request()
-        occupied = await occupied_listing_ids(session, [listing.id], stay_request)
-        now = clock()
-        try:
-            stay = resolve_listing_stay(listing, stay_request, rules, now)
-        except StayError as exc:
-            raise APIError(
-                422, exc.code, str(exc), details=[{"field": exc.field, "message": str(exc)}]
-            ) from None
-        if listing.id in occupied:
-            raise APIError(409, "DATES_UNAVAILABLE", "Requested nights are not available")
-        address = ", ".join(
-            part
-            for part in (
-                listing.address_line1,
-                listing.address_line2,
-                listing.city,
-                listing.state,
-                listing.zip_code,
-            )
-            if part
-        )
-        booking = Booking(
-            listing_id=listing.id,
-            customer_id=customer_id,
-            check_in=stay.check_in,
-            check_out=stay.check_out,
-            arrival_at=stay.arrival_at,
-            departure_at=stay.departure_at,
-            guests=stay.guests,
-            nightly_price_snapshot=stay.nightly_price,
-            total_cost=stay.total_cost,
-            currency=stay.currency,
-            listing_name_snapshot=listing.name,
-            listing_address_snapshot=address,
-            listing_zip_snapshot=listing.zip_code,
-            listing_timezone_snapshot=listing.timezone,
-            reservation_state=ReservationState.CONFIRMED,
-            cancelled_at=None,
-            created_at=now,
-            updated_at=now,
-        )
+        context = BookingContext(session, request, clock)
+        await booking_checks().handle(context)
+        booking = new_booking(customer_id, context.listing, context.stay, context.now)
         session.add(booking)
         await session.flush()
-        result = confirmation(booking, now)
+        result = confirmation(booking, context.now)
         await session.commit()
         return result
     except IntegrityError as exc:
@@ -129,28 +212,26 @@ async def booking_detail(session, customer_id, booking_id, clock: Clock) -> Book
     return confirmation(booking, clock())
 
 
-async def booking_history(session, customer_id, page, page_size, clock: Clock):
-    condition = Booking.customer_id == customer_id
-    total = await session.scalar(select(func.count()).select_from(Booking).where(condition))
-    offset = (page - 1) * page_size
-    rows = []
-    # An arbitrarily large out-of-range page is still an empty page; do not
-    # overflow PostgreSQL's bigint OFFSET parameter for valid positive integers.
-    if offset < total:
-        rows = (
-            await session.scalars(
-                select(Booking)
-                .where(condition)
-                .order_by(Booking.created_at.desc(), Booking.id)
-                .offset(offset)
-                .limit(page_size)
-            )
-        ).all()
-    now = clock()
-    return Paginated(
-        data=[confirmation(row, now) for row in rows],
-        pagination=listings.pagination(page, page_size, total),
-    )
+class BookingHistoryPage(PageQuery[Booking, BookingResponse]):
+    def __init__(self, customer_id: UUID, clock: Clock) -> None:
+        self.customer_id, self.clock = customer_id, clock
+
+    def statement(self) -> Select:
+        return select(Booking).where(Booking.customer_id == self.customer_id)
+
+    def order_by(self):
+        return (Booking.created_at.desc(), Booking.id)
+
+    def to_items(self, rows):
+        # One "now" per page so every row's computed status agrees.
+        now = self.clock()
+        return [confirmation(row, now) for row in rows]
+
+
+async def booking_history(
+    session, customer_id, page, page_size, clock: Clock
+) -> Paginated[BookingResponse]:
+    return await BookingHistoryPage(customer_id, clock).fetch(session, page, page_size)
 
 
 async def cancel_booking(session, customer_id, booking_id, clock: Clock) -> BookingResponse:

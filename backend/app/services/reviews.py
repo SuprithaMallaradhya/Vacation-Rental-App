@@ -2,16 +2,16 @@ from collections.abc import Callable
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import APIError
 from app.models import Booking, Listing, Review
 from app.models.enums import ListingStatus, ReservationState
-from app.schemas.common import Paginated
 from app.schemas.reviews import CreatedReview, PublicReview, ReviewCreate
 from app.services import bookings, listings
+from app.services.pagination import PageQuery
 
 Clock = Callable[[], datetime]
 
@@ -71,34 +71,28 @@ async def create_review(
         raise
 
 
+class ReviewPage(PageQuery[Review, PublicReview]):
+    def __init__(self, listing_id: UUID, now: datetime) -> None:
+        self.listing_id, self.now = listing_id, now
+
+    def statement(self) -> Select:
+        return (
+            select(Review)
+            .join(Booking, Review.booking_id == Booking.id)
+            .where(Booking.listing_id == self.listing_id, *eligible_reviews(self.now))
+        )
+
+    def order_by(self):
+        return (Review.created_at.desc(), Review.id)
+
+    def to_item(self, row: Review) -> PublicReview:
+        return PublicReview.model_validate(row)
+
+
 async def public_reviews(session, listing_id, page, page_size, clock: Clock):
     approved = await session.scalar(
         select(Listing.id).where(Listing.id == listing_id, Listing.status == ListingStatus.APPROVED)
     )
     if approved is None:
         raise APIError(404, "NOT_FOUND", "Listing not found")
-    now = clock()
-    conditions = (Booking.listing_id == listing_id, *eligible_reviews(now))
-    total = await session.scalar(
-        select(func.count())
-        .select_from(Review)
-        .join(Booking, Review.booking_id == Booking.id)
-        .where(*conditions)
-    )
-    offset = (page - 1) * page_size
-    rows = []
-    if offset < total:
-        rows = (
-            await session.scalars(
-                select(Review)
-                .join(Booking, Review.booking_id == Booking.id)
-                .where(*conditions)
-                .order_by(Review.created_at.desc(), Review.id)
-                .offset(offset)
-                .limit(page_size)
-            )
-        ).all()
-    return Paginated(
-        data=[PublicReview.model_validate(row) for row in rows],
-        pagination=listings.pagination(page, page_size, total),
-    )
+    return await ReviewPage(listing_id, clock()).fetch(session, page, page_size)

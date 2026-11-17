@@ -147,7 +147,12 @@ class ListingBookingRule(UUIDPrimaryKey, Base):
 class ListingMedia(UUIDPrimaryKey, Base):
     __tablename__ = "listing_media"
     __table_args__ = (
-        CheckConstraint("url ~ '^https://[^/[:space:]]+(/[^[:space:]]*)?$'", name="https_url"),
+        # HTTPS everywhere; plain HTTP only for loopback local-storage uploads (dev/test).
+        CheckConstraint(
+            "url ~ '^(https://[^/[:space:]]+(/[^[:space:]]*)?"
+            "|http://(127\\.0\\.0\\.1|localhost)(:[0-9]+)?/media/[^[:space:]]+)$'",
+            name="https_url",
+        ),
         CheckConstraint("sort_order >= 0", name="nonnegative_order"),
         Index("ix_listing_media_listing_order", "listing_id", "sort_order"),
     )

@@ -35,8 +35,10 @@ from app.services.availability import (
     resolve_listing_stay,
     validate_global_arrival,
 )
-from app.services.listings import cost_rating, pagination
+from app.services.listings import cost_rating
+from app.services.pagination import pagination
 from app.services.reviews import eligible_reviews
+from app.services.search_filters import search_filters
 
 
 def invalid_stay(error: StayError) -> APIError:
@@ -152,25 +154,7 @@ async def search(
         validate_global_arrival(request, now)
     except StayError as exc:
         raise invalid_stay(exc) from None
-    filters = [Listing.status == ListingStatus.APPROVED]
-    if query.city is not None:
-        filters.append(func.lower(Listing.city) == query.city.lower())
-    if query.state is not None:
-        filters.append(Listing.state == query.state)
-    if query.zip_code is not None:
-        filters.append(Listing.zip_code == query.zip_code)
-    if query.guests is not None:
-        filters.append(Listing.max_guests >= query.guests)
-    if query.min_price is not None:
-        filters.append(Listing.nightly_price >= query.min_price)
-    if query.max_price is not None:
-        filters.append(Listing.nightly_price <= query.max_price)
-    for amenity_id in query.amenities:
-        filters.append(
-            Listing.id.in_(
-                select(ListingAmenity.listing_id).where(ListingAmenity.amenity_id == amenity_id)
-            )
-        )
+    filters = [Listing.status == ListingStatus.APPROVED, *search_filters(query)]
     candidates = list((await session.scalars(select(Listing).where(*filters))).all())
     distances = {}
     if query.latitude is not None:

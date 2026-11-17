@@ -220,7 +220,7 @@ async def test_openapi_host_admin_security_and_json_contract(api):
         # uses these prefixes too and has its own role/error/OpenAPI coverage.
         and set(operation.get("tags", [])) & {"host listings", "admin moderation"}
     ]
-    assert len(operations) == 21
+    assert len(operations) == 22  # includes POST media/upload-url
     for operation in operations:
         assert operation["security"] == [{"BearerAuth": []}]
         assert {"401", "403", "404", "409", "422"} <= operation["responses"].keys()
