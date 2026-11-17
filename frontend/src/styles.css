@@ -1129,3 +1129,8 @@ h1, h2, h3 { font-weight: 800; letter-spacing: -0.01em; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.sched-line { margin: 0.25rem 0; }
+.sched-details { margin-top: 0.7rem; }
+.sched-details summary { cursor: pointer; color: var(--primary-dark); font-weight: 700; }
+.sched-details[open] summary { margin-bottom: 0.5rem; }

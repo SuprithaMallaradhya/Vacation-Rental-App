@@ -62,6 +62,64 @@ function PhotoGrid({ media, name }) {
   );
 }
 
+/** Groups consecutive days with identical text: ["a","a","b"] -> [{days:"Mon–Tue", text:"a"}, ...] (no day label when all 7 match). */
+function groupDays(texts) {
+  const runs = [];
+  texts.forEach((text, i) => {
+    const last = runs[runs.length - 1];
+    if (last && last.text === text) last.end = i;
+    else runs.push({ start: i, end: i, text });
+  });
+  const short = (i) => WEEKDAYS[i].slice(0, 3);
+  return runs.map((r) => ({
+    text: r.text,
+    days: runs.length === 1 ? '' : r.start === r.end ? short(r.start) : `${short(r.start)}–${short(r.end)}`,
+  }));
+}
+
+function Schedule({ data }) {
+  const rules = WEEKDAYS.map((_, i) => data.booking_rules.find((r) => r.weekday === i));
+  const hours = WEEKDAYS.map((_, i) => data.hours.find((h) => h.weekday === i));
+  const arrival = rules.map((r) => (r?.arrival_allowed ? `${fmtTime(r.arrival_start)} – ${fmtTime(r.arrival_end)}` : 'Not allowed'));
+  const departure = rules.map((r) => (r?.departure_allowed ? `${fmtTime(r.departure_start)} – ${fmtTime(r.departure_end)}` : 'Not allowed'));
+  const reachable = hours.map((h) => (!h || h.closed ? 'Closed' : `${fmtTime(h.opening_time)} – ${fmtTime(h.closing_time)}`));
+  const line = (label, texts) => (
+    <div className="sched-line">
+      <strong>{label}</strong>{' '}
+      {groupDays(texts).map((g, i) => (
+        <span key={i}>
+          {i > 0 && <span className="muted"> · </span>}
+          {g.days && <span className="muted">{g.days} </span>}
+          {g.text}
+        </span>
+      ))}
+    </div>
+  );
+  return (
+    <section className="card">
+      <h2>Check-in &amp; check-out</h2>
+      {line('Check-in', arrival)}
+      {line('Check-out', departure)}
+      {line('Host reachable', reachable)}
+      <details className="sched-details">
+        <summary>See full weekly schedule</summary>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Day</th><th>Arrival</th><th>Departure</th><th>Host reachable</th></tr>
+            </thead>
+            <tbody>
+              {WEEKDAYS.map((day, i) => (
+                <tr key={day}><td>{day}</td><td>{arrival[i]}</td><td>{departure[i]}</td><td>{reachable[i]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  );
+}
+
 function Reviews({ listingId, average, count }) {
   const [page, setPage] = useState(1);
   const [items, setItems] = useState([]);
@@ -223,43 +281,7 @@ export default function ListingDetail() {
             )}
           </section>
 
-          <section className="card">
-            <h2>Check-in &amp; check-out</h2>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Day</th>
-                    <th>Arrival</th>
-                    <th>Departure</th>
-                    <th>Host reachable</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {WEEKDAYS.map((day, i) => {
-                    const rule = data.booking_rules.find((r) => r.weekday === i);
-                    const hours = data.hours.find((h) => h.weekday === i);
-                    return (
-                      <tr key={day}>
-                        <td>{day}</td>
-                        <td>
-                          {rule?.arrival_allowed
-                            ? `${fmtTime(rule.arrival_start)} – ${fmtTime(rule.arrival_end)}`
-                            : 'Not allowed'}
-                        </td>
-                        <td>
-                          {rule?.departure_allowed
-                            ? `${fmtTime(rule.departure_start)} – ${fmtTime(rule.departure_end)}`
-                            : 'Not allowed'}
-                        </td>
-                        <td>{!hours || hours.closed ? 'Closed' : `${fmtTime(hours.opening_time)} – ${fmtTime(hours.closing_time)}`}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <Schedule data={data} />
 
           <section className="card">
             <h2>Location</h2>
