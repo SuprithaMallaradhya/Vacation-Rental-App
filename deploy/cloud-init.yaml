@@ -1,0 +1,31 @@
+#cloud-config
+# Rendered by deploy/deploy.sh (the dollar-brace placeholders are filled in) and passed to the scale set
+# as custom data. Every new VM, including ones added by autoscaling, runs this once at first boot.
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+
+write_files:
+  - path: /opt/vacation-rental/compose.yaml
+    encoding: b64
+    content: ${COMPOSE_B64}
+  - path: /opt/vacation-rental/.env.prod
+    encoding: b64
+    permissions: "0600"
+    content: ${ENV_B64}
+  - path: /opt/vacation-rental/start.sh
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -e
+      cd /opt/vacation-rental
+      if [ -n "${GHCR_TOKEN}" ]; then
+        echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+      fi
+      docker compose pull --quiet
+      docker compose up -d --remove-orphans
+
+runcmd:
+  - systemctl enable --now docker
+  - /opt/vacation-rental/start.sh

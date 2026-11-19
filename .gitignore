@@ -27,3 +27,8 @@ AGENTS.override.md
 
 # Local implementation instructions
 /implementation_plan.md
+
+# Deployment: real configuration/secrets stay local
+!deploy/.env.prod.example
+deploy/azure.env
+deploy/out/

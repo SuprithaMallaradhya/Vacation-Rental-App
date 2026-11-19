@@ -1,10 +1,10 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 
 from app.models import Booking, Listing, ListingBookingRule
 from app.models.enums import ReservationState
@@ -226,7 +226,18 @@ async def test_booking_uses_current_price_instead_of_older_search_quote(api, clo
 
 
 @pytest.mark.parametrize("start,hours", [("2027-03-13", 19), ("2027-11-06", 21)])
-async def test_dst_changes_elapsed_hours_not_nightly_price(api, clock, start, hours):
+async def test_dst_changes_elapsed_hours_not_nightly_price(api, db, clock, start, hours):
+    # Seeded future stays are anchored to the day the tests run, so one of them can
+    # cover this fixed DST night; clear it so the test does not depend on today's date.
+    night = date.fromisoformat(start)
+    await db.execute(
+        delete(Booking).where(
+            Booking.listing_id == demo_id("listing/0"),
+            Booking.check_in <= night,
+            Booking.check_out > night,
+        )
+    )
+    await db.commit()
     clock[0] = datetime(2027, 1, 1, tzinfo=UTC)
     booking = await create(api, clock, check_in=start, nights=1)
     assert booking["total_cost"] == "99.99" and booking["nights"] == 1
