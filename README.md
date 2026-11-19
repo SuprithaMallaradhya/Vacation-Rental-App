@@ -10,7 +10,7 @@ This repository contains the Python/FastAPI backend and shared API documentation
 | React screens and API client | Frontend owner; implementation/integration pending |
 | Google address search and map | Frontend owner, with backend support; approved Google access and live integration pending |
 | Integration testing | Shared; backend API tests in place, actual React/browser/Maps acceptance pending |
-| Production packaging and Azure | Backend owner, with shared final acceptance; not deployed |
+| Production packaging and Azure | Deployment owner; Docker images, nginx, scale set/load balancer/PostgreSQL deployed and tested on Azure (see [deployment guide](docs/deployment.md)) |
 
 Start from `main` for the merged backend. Use a feature branch and pull request for changes. Coordinate where the teammate's existing React app will live rather than creating a second frontend. See the [phase audit](docs/phase-acceptance.md) for evidence and remaining checks.
 
