@@ -1,0 +1,24 @@
+# Local override: build the production images from source instead of pulling them,
+# and let the API reach the local development Postgres on the host machine.
+#
+#   cp deploy/.env.prod.example deploy/.env.prod   # then edit it for local use
+#   make prod-local-up                             # http://localhost:8080
+
+services:
+  api:
+    image: vacation-rental-api:local
+    build:
+      context: ../backend
+      args:
+        EXTRAS: azure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  web:
+    image: vacation-rental-web:local
+    build:
+      context: ../frontend
+      args:
+        VITE_API_BASE_URL: /api/v1
+    ports: !override
+      - "8080:80"

@@ -38,6 +38,14 @@ schema-check:
 
 verify: lint test schema-check
 
+PROD_COMPOSE := docker compose -f deploy/compose.prod.yaml -f deploy/compose.build.yaml
+
+# Production images (nginx + React build + FastAPI) on http://localhost:8080,
+# using the local dev database. Needs deploy/.env.prod (copy deploy/.env.prod.example).
 prod-local-up:
-	@echo "Phase 10: production-like proxy/UI packaging is not implemented yet."
-	@exit 1
+	@test -f deploy/.env.prod || (echo "Create deploy/.env.prod first: cp deploy/.env.prod.example deploy/.env.prod (set JWT_SECRET_KEY)" && exit 1)
+	$(PROD_COMPOSE) up -d --build --wait
+	@echo "Open http://localhost:8080  (health: http://localhost:8080/ready)"
+
+prod-local-down:
+	$(PROD_COMPOSE) down

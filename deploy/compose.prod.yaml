@@ -1,0 +1,37 @@
+# Production stack that runs on every VM in the Azure scale set.
+#   web : nginx serving the React build on port 80, proxying /api to "api"
+#   api : FastAPI (not published on the host; only nginx can reach it)
+# Configuration and secrets come from .env.prod next to this file (never committed).
+# Images are pulled from GitHub Container Registry; see .github/workflows/images.yml.
+
+name: vacation-rental
+
+services:
+  api:
+    image: ${API_IMAGE:-ghcr.io/suprithamallaradhya/vacation-rental-api:latest}
+    env_file: .env.prod
+    # Port 8000 is only reachable from nginx, so trusting forwarded headers is safe.
+    command:
+      - uvicorn
+      - app.main:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+      - --workers=2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/suprithamallaradhya/vacation-rental-web:latest}
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
